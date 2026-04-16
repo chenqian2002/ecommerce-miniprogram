@@ -1,0 +1,58 @@
+{
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "uglifyFileName": false,
+    "enhance": true,
+    "packNpmRelationList": [],
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "useCompilerPlugins": false,
+    "minifyWXML": true,
+    "checkSiteMap": false,
+    "urlCheck": false,
+    "compileWorklet": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
+  },
+  "compileType": "miniprogram",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "appid": "wxf20133399e7c179c",
+  "editorSetting": {
+    "basePath": "",
+    "checkOnSave": true,
+    "checkOnType": false,
+    "ignoreCloudFunctionLocalConfig": true
+  },
+  "localPlugins": [],
+  "condition": {
+    "search": {
+      "list": []
+    },
+    "conversation": {
+      "list": []
+    },
+    "game": {
+      "currentL": [],
+      "list": []
+    },
+    "miniprogram": {
+      "list": []
+    }
+  },
+  "libVersion": "3.15.2"
+}

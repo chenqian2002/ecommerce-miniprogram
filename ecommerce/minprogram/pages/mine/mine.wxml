@@ -1,0 +1,86 @@
+<!--pages/mine/mine.wxml-->
+<view class="container">
+  <!-- 用户信息区 -->
+  <view class="user-section">
+    <view class="user-avatar">👤</view>
+    <view class="user-info">
+      <view class="user-name">{{userInfo.name || '游客用户'}}</view>
+      <view class="user-phone">{{userInfo.phone || ''}}</view>
+    </view>
+  </view>
+
+  <!-- 订单统计 -->
+  <view class="stats-section">
+    <view class="stat-item" bindtap="goToOrders" data-status="pending">
+      <view class="stat-icon">💳</view>
+      <view class="stat-text">待付款</view>
+      <view class="stat-count">{{stats.pending}}</view>
+    </view>
+    <view class="stat-item" bindtap="goToOrders" data-status="shipped">
+      <view class="stat-icon">🚚</view>
+      <view class="stat-text">待收货</view>
+      <view class="stat-count">{{stats.shipped}}</view>
+    </view>
+    <view class="stat-item" bindtap="goToOrders" data-status="received">
+      <view class="stat-icon">✅</view>
+      <view class="stat-text">已完成</view>
+      <view class="stat-count">{{stats.received}}</view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="goToOrders">
+      <view class="menu-left">
+        <view class="menu-icon">📦</view>
+        <view class="menu-text">我的订单</view>
+      </view>
+      <view class="menu-right">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="handleAddresses">
+      <view class="menu-left">
+        <view class="menu-icon">📍</view>
+        <view class="menu-text">收货地址</view>
+      </view>
+      <view class="menu-right">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="handleFavorites">
+      <view class="menu-left">
+        <view class="menu-icon">❤️</view>
+        <view class="menu-text">我的收藏</view>
+      </view>
+      <view class="menu-right">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="handleCoupon">
+      <view class="menu-left">
+        <view class="menu-icon">🎟️</view>
+        <view class="menu-text">优惠券</view>
+      </view>
+      <view class="menu-right">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="handleSettings">
+      <view class="menu-left">
+        <view class="menu-icon">⚙️</view>
+        <view class="menu-text">设置</view>
+      </view>
+      <view class="menu-right">›</view>
+    </view>
+
+    <view class="menu-item" bindtap="handleAbout">
+      <view class="menu-left">
+        <view class="menu-icon">ℹ️</view>
+        <view class="menu-text">关于我们</view>
+      </view>
+      <view class="menu-right">›</view>
+    </view>
+  </view>
+
+  <!-- 退出登录按钮 -->
+  <view class="logout-section">
+    <button class="logout-btn" bindtap="logout">退出登录</button>
+  </view>
+</view>

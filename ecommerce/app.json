@@ -1,0 +1,61 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/products/products",
+    "pages/product-detail/product-detail",
+    "pages/index/index",
+    "pages/cart/cart",
+    "pages/checkout/checkout",
+    "pages/orders/orders",
+    "pages/order-detail/order-detail",
+    "pages/address/address-list",
+    "pages/address/address-add",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#007ACC",
+    "navigationBarTitleText": "电商平台",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F5F5F5"
+  },
+  "tabBar": {
+    "color": "#666666",
+    "selectedColor": "#007ACC",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/products/products",
+        "text": "商品",
+        "iconPath": "images/tab-shop.png",
+        "selectedIconPath": "images/tab-shop-active.png"
+      },
+      {
+        "pagePath": "pages/cart/cart",
+        "text": "购物车",
+        "iconPath": "images/tab-cart.png",
+        "selectedIconPath": "images/tab-cart-active.png"
+      },
+      {
+        "pagePath": "pages/orders/orders",
+        "text": "订单",
+        "iconPath": "images/tab-order.png",
+        "selectedIconPath": "images/tab-order-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tab-profile.png",
+        "selectedIconPath": "images/tab-profile-active.png"
+      }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "获取精准收货地址"
+    }
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
