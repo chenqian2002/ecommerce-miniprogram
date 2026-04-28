@@ -1,0 +1,75 @@
+<!--pages/order-detail/order-detail.wxml-->
+<view class="page">
+  <view class="title">订单详情</view>
+
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <view wx:elif="{{order}}">
+    <view class="card">
+      <view class="row"><text>订单号</text><text>{{order.order_number}}</text></view>
+      <view class="row"><text>状态</text><text>{{order.status_text}}</text></view>
+      <view class="row"><text>支付方式</text><text>{{order.payment_method}}</text></view>
+      <view class="row"><text>备注</text><text>{{order.remark || '无'}}</text></view>
+      <view class="row"><text>下单时间</text><text>{{order.created_at}}</text></view>
+    </view>
+
+    <view class="card" wx:if="{{order.address}}">
+      <view class="section-title">收货地址</view>
+      <view class="address-name">{{order.address.receiver_name}} {{order.address.phone}}</view>
+      <view class="address-detail">{{order.address.full_address}}</view>
+    </view>
+
+    <view class="card" wx:else>
+      <view class="section-title">收货地址</view>
+      <view class="empty-address">暂无收货地址信息</view>
+    </view>
+
+    <view class="card">
+      <view class="section-title">商品列表</view>
+      <view wx:if="{{order.items && order.items.length}}">
+        <view wx:for="{{order.items}}" wx:key="product_id" class="item-row">
+          <view class="item-name">{{item.name}}</view>
+          <view class="item-meta">¥{{item.price}} × {{item.quantity}}</view>
+        </view>
+      </view>
+      <view wx:else class="empty-items">暂无商品明细</view>
+    </view>
+
+    <view class="card">
+      <view class="row"><text>订单金额</text><text>¥{{order.total_price}}</text></view>
+    </view>
+
+    <view class="actions">
+      <button
+        wx:if="{{order.status === 'pending'}}"
+        class="action-btn pay-btn"
+        bindtap="payOrder"
+        loading="{{actioning}}"
+      >
+        立即支付
+      </button>
+      <button
+        wx:if="{{order.status === 'pending'}}"
+        class="action-btn danger-btn"
+        bindtap="cancelOrder"
+        loading="{{actioning}}"
+      >
+        取消订单
+      </button>
+      <button
+        wx:if="{{order.status === 'shipped' || order.status === 'paid'}}"
+        class="action-btn primary-btn"
+        bindtap="confirmReceive"
+        loading="{{actioning}}"
+      >
+        确认收货
+      </button>
+    </view>
+  </view>
+
+  <view wx:else class="empty">
+    <view class="empty-icon">📦</view>
+    <view class="empty-text">暂无订单详情</view>
+    <view class="empty-tip">你可以先去商品页下单，再回来查看</view>
+  </view>
+</view>

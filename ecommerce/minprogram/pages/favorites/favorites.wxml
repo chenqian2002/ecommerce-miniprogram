@@ -1,0 +1,31 @@
+<!--pages/favorites/favorites.wxml-->
+<view class="page">
+  <view class="title">我的收藏</view>
+
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <view wx:elif="{{favorites.length === 0}}" class="empty">
+    <view class="empty-icon">❤️</view>
+    <view class="empty-text">暂无收藏商品</view>
+    <view class="empty-tip">去商品页浏览并收藏喜欢的商品吧</view>
+    <button class="go-btn" bindtap="goToProducts">去逛逛</button>
+  </view>
+
+  <view wx:else class="list">
+    <view
+      wx:for="{{favorites}}"
+      wx:key="id"
+      class="item"
+      bindtap="goToDetail"
+      data-product-id="{{item.id}}"
+    >
+      <view class="item-image">🍔</view>
+      <view class="item-main">
+        <view class="item-name">{{item.name}}</view>
+        <view class="item-desc">{{item.description || '收藏商品'}}</view>
+        <view class="item-price">¥{{item.price}}</view>
+      </view>
+      <button class="remove-btn" catchtap="removeFavorite" data-product-id="{{item.id}}">取消</button>
+    </view>
+  </view>
+</view>

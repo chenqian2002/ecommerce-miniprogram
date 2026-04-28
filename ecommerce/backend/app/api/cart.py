@@ -3,10 +3,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import List
 
 from app.database.database import get_db
 from app.database.models import CartItemModel, ProductModel, UserModel
+from app.core.security import get_current_user
 
 router = APIRouter()
 
@@ -23,34 +23,24 @@ class CartItemResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# 获取当前用户（简化版）
-def get_current_user(db: Session = Depends(get_db)):
-    # TODO: 从 token 解析用户 ID
-    user_id = 1  # 示例
-    user = db.query(UserModel).filter(UserModel.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="未授权")
-    return user
-
 @router.get("/cart")
 def get_cart(user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
     """获取购物车"""
-    items = db.query(CartItemModel).filter(
-        CartItemModel.user_id == user.id
-    ).all()
-    
+    items = db.query(CartItemModel).filter(CartItemModel.user_id == user.id).all()
     result = []
     for item in items:
         product = db.query(ProductModel).filter(ProductModel.id == item.product_id).first()
+        if not product:
+            continue
         result.append({
             "id": item.id,
             "product_id": item.product_id,
             "quantity": item.quantity,
             "name": product.name,
             "price": product.price,
-            "image_url": product.image_url
+            "image_url": product.image_url,
+            "stock": product.stock,
         })
-    
     return {"data": result}
 
 @router.post("/cart/add")
@@ -60,29 +50,32 @@ def add_to_cart(
     db: Session = Depends(get_db)
 ):
     """添加商品到购物车"""
-    # 检查商品是否存在
+    if request.quantity <= 0:
+        raise HTTPException(status_code=400, detail="数量必须大于0")
+
     product = db.query(ProductModel).filter(ProductModel.id == request.product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="商品不存在")
-    
-    # 查询购物车中是否已有该商品
+
     cart_item = db.query(CartItemModel).filter(
         CartItemModel.user_id == user.id,
         CartItemModel.product_id == request.product_id
     ).first()
-    
+
+    next_quantity = request.quantity + (cart_item.quantity if cart_item else 0)
+    if product.stock is not None and next_quantity > product.stock:
+        raise HTTPException(status_code=400, detail=f"库存不足，仅剩 {product.stock} 件")
+
     if cart_item:
-        # 更新数量
-        cart_item.quantity += request.quantity
+        cart_item.quantity = next_quantity
     else:
-        # 新增
         cart_item = CartItemModel(
             user_id=user.id,
             product_id=request.product_id,
             quantity=request.quantity
         )
         db.add(cart_item)
-    
+
     db.commit()
     return {"message": "添加成功"}
 
@@ -98,13 +91,24 @@ def update_cart_item(
         CartItemModel.id == item_id,
         CartItemModel.user_id == user.id
     ).first()
-    
+
     if not item:
         raise HTTPException(status_code=404, detail="购物车项不存在")
-    
+
+    if request.quantity <= 0:
+        db.delete(item)
+        db.commit()
+        return {"message": "已删除"}
+
+    product = db.query(ProductModel).filter(ProductModel.id == item.product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="商品不存在")
+
+    if product.stock is not None and request.quantity > product.stock:
+        raise HTTPException(status_code=400, detail=f"库存不足，仅剩 {product.stock} 件")
+
     item.quantity = request.quantity
     db.commit()
-    
     return {"message": "修改成功"}
 
 @router.delete("/cart/{item_id}")
@@ -118,13 +122,12 @@ def remove_from_cart(
         CartItemModel.id == item_id,
         CartItemModel.user_id == user.id
     ).first()
-    
+
     if not item:
         raise HTTPException(status_code=404, detail="购物车项不存在")
-    
+
     db.delete(item)
     db.commit()
-    
     return {"message": "删除成功"}
 
 @router.delete("/cart/clear")
@@ -135,5 +138,5 @@ def clear_cart(
     """清空购物车"""
     db.query(CartItemModel).filter(CartItemModel.user_id == user.id).delete()
     db.commit()
-    
     return {"message": "清空成功"}
+

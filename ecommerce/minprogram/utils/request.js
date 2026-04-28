@@ -11,7 +11,7 @@ export function request(options) {
       method = 'GET',
       data = {},
       header = {},
-      timeout = 8000  // 8秒超时
+      timeout = 15000  // 15秒超时
     } = options;
 
     // 获取token
@@ -25,36 +25,38 @@ export function request(options) {
       finalHeader['Authorization'] = `Bearer ${token}`;
     }
 
-    // 额外的超时控制
-    const timeoutHandle = setTimeout(() => {
-      reject(new Error('请求超时，请检查网络'));
-    }, timeout);
-
     wx.request({
       url: `${app.globalData.apiBaseUrl}${url}`,
       method,
       data,
       header: finalHeader,
-      timeout: timeout,
+      timeout,
       success(res) {
-        clearTimeout(timeoutHandle);
-        if (res.statusCode === 401) {
-          // token过期，清除并跳转到登录
+                if (res.statusCode === 401) {
           wx.removeStorageSync('token');
-          wx.redirectTo({
+          wx.reLaunch({
             url: '/pages/login/login'
           });
           reject(new Error('未授权，请重新登录'));
         } else if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
         } else {
-          reject(new Error(res.data.message || '请求失败'));
+          const raw = res.data;
+          const message = raw?.message || raw?.detail || raw?.error || `请求失败(${res.statusCode})`;
+          const error = new Error(message);
+          error.statusCode = res.statusCode;
+          error.response = raw;
+          reject(error);
         }
       },
       fail(err) {
-        clearTimeout(timeoutHandle);
         console.error('Request fail:', err);
-        reject(err);
+        const error = new Error(err.errMsg || '网络请求失败');
+        error.original = err;
+        if (err.errMsg && err.errMsg.includes('timeout')) {
+          error.message = '请求超时，请检查网络或稍后重试';
+        }
+        reject(error);
       }
     });
   });
@@ -103,3 +105,4 @@ export function del(url, data = {}) {
     data
   });
 }
+

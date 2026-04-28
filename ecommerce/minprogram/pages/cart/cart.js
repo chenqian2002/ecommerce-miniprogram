@@ -1,61 +1,108 @@
 // pages/cart/cart.js
-import { getCart, setCart } from '../../utils/storage';
+import { get, put, del } from '../../utils/request';
 
 Page({
   data: {
     cart: [],
-    totalPrice: 0
+    totalPrice: 0,
+    loading: false
   },
 
   onLoad() {
     this.loadCart();
   },
 
-  onShow() {
+    onShow() {
     this.loadCart();
   },
 
-  loadCart() {
-    const cart = getCart();
-    const totalPrice = cart.reduce((total, item) => {
-      return total + (item.price * item.quantity);
-    }, 0);
+  onPullDownRefresh() {
+    this.loadCart(true);
+  },
 
-    this.setData({ cart, totalPrice });
+  loadCart(fromPullDown = false) {
+    this.setData({ loading: true });
+    get('/cart')
+      .then(res => {
+        const rawCart = Array.isArray(res) ? res : (res.data || []);
+        const cart = rawCart
+          .filter(item => item && item.id && item.product_id && (item.quantity || 0) > 0)
+          .map(item => ({
+            ...item,
+            price: Number(item.price || 0),
+            quantity: Number(item.quantity || 0)
+          }));
+        const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+        this.setData({ cart, totalPrice });
+      })
+      .catch(error => {
+        console.error('Load cart error:', error);
+        this.setData({ cart: [], totalPrice: 0 });
+        wx.showToast({ title: '购物车加载失败', icon: 'none' });
+      })
+      .finally(() => {
+        this.setData({ loading: false });
+        if (fromPullDown) wx.stopPullDownRefresh();
+      });
   },
 
   handleIncreaseQuantity(e) {
-    const productId = e.currentTarget.dataset.productId;
-    const cart = this.data.cart;
-    const item = cart.find(i => i.product_id === productId);
+    const itemId = parseInt(e.currentTarget.dataset.itemId);
+    const item = this.data.cart.find(i => i.id === itemId);
+    if (!item) return;
 
-    if (item) {
-      item.quantity += 1;
-      setCart(cart);
-      this.loadCart();
-    }
+    put(`/cart/${itemId}`, {
+      product_id: item.product_id,
+      quantity: item.quantity + 1
+    })
+      .then(() => this.loadCart())
+      .catch(error => {
+        console.error('Update cart error:', error);
+        wx.showToast({ title: error.message || '修改失败', icon: 'none' });
+      });
   },
 
   handleReduceQuantity(e) {
-    const productId = e.currentTarget.dataset.productId;
-    const cart = this.data.cart;
-    const item = cart.find(i => i.product_id === productId);
+    const itemId = parseInt(e.currentTarget.dataset.itemId);
+    const item = this.data.cart.find(i => i.id === itemId);
+    if (!item) return;
 
-    if (item && item.quantity > 1) {
-      item.quantity -= 1;
-      setCart(cart);
-      this.loadCart();
+    if (item.quantity <= 1) {
+      del(`/cart/${itemId}`)
+        .then(() => {
+          this.loadCart();
+          wx.showToast({ title: '已删除', icon: 'success' });
+        })
+        .catch(error => {
+          console.error('Delete cart item error:', error);
+          wx.showToast({ title: error.message || '删除失败', icon: 'none' });
+        });
+      return;
     }
+
+    put(`/cart/${itemId}`, {
+      product_id: item.product_id,
+      quantity: item.quantity - 1
+    })
+      .then(() => this.loadCart())
+      .catch(error => {
+        console.error('Update cart error:', error);
+        wx.showToast({ title: error.message || '修改失败', icon: 'none' });
+      });
   },
 
   handleRemoveItem(e) {
-    const productId = e.currentTarget.dataset.productId;
-    const cart = this.data.cart.filter(i => i.product_id !== productId);
+    const itemId = parseInt(e.currentTarget.dataset.itemId);
 
-    setCart(cart);
-    this.loadCart();
-
-    wx.showToast({ title: '已删除', icon: 'success' });
+    del(`/cart/${itemId}`)
+      .then(() => {
+        this.loadCart();
+        wx.showToast({ title: '已删除', icon: 'success' });
+      })
+      .catch(error => {
+        console.error('Delete cart item error:', error);
+        wx.showToast({ title: error.message || '删除失败', icon: 'none' });
+      });
   },
 
   handleCheckout() {

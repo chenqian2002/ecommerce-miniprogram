@@ -18,7 +18,7 @@ class UserModel(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # 关系
+            # 关系
     addresses = relationship("AddressModel", back_populates="user")
     orders = relationship("OrderModel", back_populates="user")
     cart_items = relationship("CartItemModel", back_populates="user")
@@ -93,7 +93,7 @@ class OrderModel(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # 关系
+            # 关系
     user = relationship("UserModel", back_populates="orders")
     items = relationship("OrderItemModel", back_populates="order")
 

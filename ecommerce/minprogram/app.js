@@ -1,9 +1,12 @@
+import { API_BASE_URL } from './utils/config';
+
 App({
   onLaunch() {
     console.log('App launched');
   },
 
   globalData: {
-    apiBaseUrl: 'http://127.0.0.1:8000/api'
+    apiBaseUrl: API_BASE_URL
   }
 });
+

@@ -322,7 +322,7 @@ def add_addresses(db):
             province="北京市",
             city="朝阳区",
             district="三里屯",
-            detail="某某街道1号楼1单元101室",
+                                    detail="",
             is_default=True
         )
         db.add(address)

@@ -45,22 +45,23 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     - 账号: 13800138000
     - 密码: 123456
     """
-    print(f"📱 登录请求: {request.phone}")
+    print(f"登录请求: {request.phone}")
     
     user = db.query(UserModel).filter(UserModel.phone == request.phone).first()
     
     if not user:
-        print(f"❌ 用户不存在: {request.phone}")
+        print(f"用户不存在: {request.phone}")
         raise HTTPException(status_code=401, detail="账号或密码错误")
     
     # 验证密码
     if not verify_password(request.password, user.password_hash):
-        print(f"❌ 密码错误: {request.phone}")
+        print(f"密码错误: {request.phone}")
         raise HTTPException(status_code=401, detail="账号或密码错误")
     
-    print(f"✅ 登录成功: {request.phone}")
+    print(f"登录成功: {request.phone}")
     
     token = create_access_token(user.id)
+    is_merchant = user.phone == '13800138000'
     
     return {
         "token": token,
@@ -68,7 +69,9 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             "id": user.id,
             "phone": user.phone,
             "nickname": user.nickname,
-            "avatar": user.avatar
+            "avatar": user.avatar,
+            "role": "merchant" if is_merchant else "customer",
+            "isMerchant": is_merchant
         }
     }
 
@@ -116,7 +119,9 @@ async def wechat_login(request: WechatLoginRequest, db: Session = Depends(get_db
             "id": user.id,
             "openid": user.openid,
             "nickname": user.nickname,
-            "avatar": user.avatar
+            "avatar": user.avatar,
+            "role": "customer",
+            "isMerchant": False
         }
     }
 
@@ -126,3 +131,6 @@ def logout():
     登出（客户端删除本地 token）
     """
     return {"message": "登出成功"}
+
+
+

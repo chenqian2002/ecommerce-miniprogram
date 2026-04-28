@@ -1,0 +1,119 @@
+<!-- pages/merchant/merchant.wxml -->
+<view class="page">
+  <view class="header">
+    <view class="title">商家平台</view>
+    <view class="subtitle">商品上架、编辑与管理</view>
+  </view>
+
+  <view class="card search-card">
+    <view class="search-row">
+      <input
+        class="search-input"
+        placeholder="搜索商品名称 / 描述 / 编号"
+        value="{{searchValue}}"
+        bindinput="handleSearchInput"
+        confirm-type="search"
+        bindconfirm="handleSearch"
+      />
+      <button class="search-btn" bindtap="handleSearch">搜索</button>
+      <button class="clear-btn" bindtap="clearSearch">重置</button>
+    </view>
+  </view>
+
+  <view class="card form-card">
+    <view class="section-title">{{form.id ? '编辑商品' : '新增商品'}}</view>
+
+    <view class="input-group">
+      <text class="label">商品名称</text>
+      <input class="input" value="{{form.name}}" bindinput="handleInput" data-field="name" placeholder="请输入商品名称" />
+    </view>
+
+    <view class="input-group">
+      <text class="label">商品描述</text>
+      <textarea class="textarea" value="{{form.description}}" bindinput="handleInput" data-field="description" placeholder="请输入商品描述" />
+    </view>
+
+    <view class="grid-2">
+      <view class="input-group">
+        <text class="label">售价</text>
+        <input class="input" type="number" value="{{form.price}}" bindinput="handleInput" data-field="price" placeholder="0.00" />
+      </view>
+      <view class="input-group">
+        <text class="label">原价</text>
+        <input class="input" type="number" value="{{form.original_price}}" bindinput="handleInput" data-field="original_price" placeholder="0.00" />
+      </view>
+    </view>
+
+    <view class="grid-2">
+      <view class="input-group">
+        <text class="label">库存</text>
+        <input class="input" type="number" value="{{form.stock}}" bindinput="handleInput" data-field="stock" placeholder="库存数量" />
+      </view>
+      <view class="input-group">
+        <text class="label">销量</text>
+        <input class="input" type="number" value="{{form.sales}}" bindinput="handleInput" data-field="sales" placeholder="销量" />
+      </view>
+    </view>
+
+    <view class="input-group">
+      <text class="label">评分</text>
+      <input class="input" type="number" value="{{form.rating}}" bindinput="handleInput" data-field="rating" placeholder="5.0" />
+    </view>
+
+    <view class="input-group">
+      <text class="label">图片地址</text>
+      <view class="image-row">
+        <input class="input image-input" value="{{form.image_url}}" bindinput="handleInput" data-field="image_url" placeholder="上传后自动填入，或手动填写链接" />
+        <button class="upload-btn" bindtap="chooseImage" loading="{{uploadingImage}}">{{uploadingImage ? '上传中' : '手机上传'}}</button>
+      </view>
+      <image wx:if="{{form.image_url}}" class="image-preview" src="{{form.image_url}}" mode="aspectFill" />
+    </view>
+
+    <view class="input-group">
+      <text class="label">商品分类</text>
+      <picker mode="selector" range="{{categories}}" range-key="name" value="{{selectedCategoryIndex}}" bindchange="handleCategoryChange">
+        <view class="picker">{{categories[selectedCategoryIndex] ? categories[selectedCategoryIndex].name : '请选择分类'}}</view>
+      </picker>
+    </view>
+
+    <view class="action-row">
+      <button class="reset-btn" bindtap="resetForm">重置</button>
+      <button class="submit-btn" bindtap="submitForm" loading="{{submitting}}">{{form.id ? '保存修改' : '上架商品'}}</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">商品分类</view>
+    <view class="filter-row">
+      <view wx:for="{{filterTabs}}" wx:key="value" class="filter-item {{currentFilter === item.value ? 'active' : ''}}" bindtap="handleFilterChange" data-filter="{{item.value}}">
+        {{item.label}}
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">商品列表</view>
+    <view wx:if="{{loading}}" class="loading-text">加载中...</view>
+    <view wx:elif="{{filteredProducts.length === 0}}" class="empty-state">
+      <view class="empty-state-icon">📭</view>
+      <view class="empty-state-title">暂无商品</view>
+      <view class="empty-state-desc">你可以先通过上方表单新增商品，或切换筛选条件查看其他结果</view>
+    </view>
+    <view wx:else class="product-list">
+      <view wx:for="{{filteredProducts}}" wx:key="id" class="product-item">
+        <view class="product-main" bindtap="editProduct" data-product="{{item}}">
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-desc">¥{{item.price}} · 库存 {{item.stock}} · 销量 {{item.sales}}</view>
+        </view>
+        <view class="product-actions">
+          <button class="edit-btn" catchtap="editProduct" data-product="{{item}}">修改</button>
+          <button class="delete-btn" catchtap="offShelfProduct" data-product-id="{{item.id}}">下架</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer-actions">
+    <button class="back-btn" bindtap="goBack">返回商城</button>
+  </view>
+</view>

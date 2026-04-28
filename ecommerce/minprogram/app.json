@@ -1,11 +1,20 @@
 {
-  "pages": [
+    "pages": [
     "pages/login/login",
     "pages/products/products",
+    "pages/product-detail/product-detail",
     "pages/cart/cart",
+    "pages/checkout/checkout",
+    "pages/address-add/address-add",
     "pages/orders/orders",
+    "pages/order-detail/order-detail",
+    "pages/favorites/favorites",
+    "pages/settings/settings",
+    "pages/about/about",
+    "pages/merchant/merchant",
     "pages/mine/mine"
   ],
+
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#007ACC",
@@ -40,3 +49,5 @@
   "style": "v2",
   "sitemapLocation": "sitemap.json"
 }
+
+

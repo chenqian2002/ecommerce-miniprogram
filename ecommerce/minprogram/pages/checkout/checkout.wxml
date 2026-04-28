@@ -1,0 +1,55 @@
+<!--pages/checkout/checkout.wxml-->
+<view class="checkout-page">
+  <view class="section-title">确认订单</view>
+  <view class="section-desc">请选择收货地址，确认商品后即可提交订单并完成支付。</view>
+  <view class="card">
+    <view class="section-subtitle">收货地址</view>
+    <view wx:if="{{loadingAddresses}}" class="loading-text">地址加载中...</view>
+    <view wx:elif="{{addresses.length === 0}}" class="empty-address">
+      <view class="empty-icon">📍</view>
+      <view class="empty-text">当前没有可用收货地址</view>
+      <view class="empty-tip">请先新增收货地址，再继续提交订单</view>
+      <button class="add-address-btn" bindtap="goToAddAddress">新增地址</button>
+    </view>
+    <view wx:else class="address-list">
+      <view
+        wx:for="{{addresses}}"
+        wx:key="id"
+        class="address-item {{selectedAddressId === item.id ? 'active' : ''}}"
+        bindtap="handleSelectAddress"
+        data-address-id="{{item.id}}"
+      >
+        <view class="address-main">
+          <view class="address-name">{{item.receiver_name}} {{item.phone}}</view>
+          <view class="address-detail">{{item.province}}{{item.city}}{{item.district}}</view>
+          <view wx:if="{{item.detail}}" class="address-detail">{{item.detail}}</view>
+        </view>
+        <button class="edit-address-btn" catchtap="editAddress" data-address-id="{{item.id}}">编辑</button>
+      </view>
+      <button class="add-address-btn" bindtap="goToAddAddress">新增地址</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-subtitle">商品清单</view>
+    <view wx:if="{{loadingCart}}" class="loading-text">购物车加载中...</view>
+    <view wx:elif="{{cart.length === 0}}" class="empty-goods">购物车为空，请先添加商品</view>
+    <view wx:else>
+      <view wx:for="{{cart}}" wx:key="id" class="goods-item">
+        <view class="goods-name">{{item.name}}</view>
+        <view class="goods-meta">¥{{item.price}} × {{item.quantity}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card summary-card">
+    <view class="summary-line">
+      <text>商品总价</text>
+      <text>¥{{totalPrice}}</text>
+    </view>
+  </view>
+
+  <button class="submit-btn" bindtap="handleSubmitOrder" loading="{{submitting}}" disabled="{{submitting || cart.length === 0 || addresses.length === 0}}">
+    提交订单并支付
+  </button>
+</view>

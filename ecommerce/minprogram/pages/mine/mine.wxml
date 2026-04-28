@@ -1,15 +1,14 @@
 <!--pages/mine/mine.wxml-->
 <view class="container">
-  <!-- 用户信息区 -->
   <view class="user-section">
     <view class="user-avatar">👤</view>
     <view class="user-info">
-      <view class="user-name">{{userInfo.name || '游客用户'}}</view>
-      <view class="user-phone">{{userInfo.phone || ''}}</view>
+      <view class="user-name">{{userInfo.name || userInfo.nickname || '游客用户'}}</view>
+      <view class="user-phone">{{userInfo.phone || '未登录'}}</view>
     </view>
+    <view class="user-badge" wx:if="{{loading}}">更新中</view>
   </view>
 
-  <!-- 订单统计 -->
   <view class="stats-section">
     <view class="stat-item" bindtap="goToOrders" data-status="pending">
       <view class="stat-icon">💳</view>
@@ -21,14 +20,24 @@
       <view class="stat-text">待收货</view>
       <view class="stat-count">{{stats.shipped}}</view>
     </view>
-    <view class="stat-item" bindtap="goToOrders" data-status="received">
+    <view class="stat-item" bindtap="goToOrders" data-status="completed">
       <view class="stat-icon">✅</view>
       <view class="stat-text">已完成</view>
       <view class="stat-count">{{stats.received}}</view>
     </view>
   </view>
 
-  <!-- 功能菜单 -->
+  <view class="feature-card" wx:for="{{featureCards}}" wx:key="key" bindtap="handleFeature" data-key="{{item.key}}">
+    <view class="feature-left">
+      <view class="feature-icon">{{item.icon}}</view>
+      <view>
+        <view class="feature-title">{{item.title}}</view>
+        <view class="feature-desc">{{item.desc}}</view>
+      </view>
+    </view>
+    <view class="feature-arrow">›</view>
+  </view>
+
   <view class="menu-section">
     <view class="menu-item" bindtap="goToOrders">
       <view class="menu-left">
@@ -38,7 +47,7 @@
       <view class="menu-right">›</view>
     </view>
 
-    <view class="menu-item" bindtap="handleAddresses">
+    <view class="menu-item" bindtap="goToAddress">
       <view class="menu-left">
         <view class="menu-icon">📍</view>
         <view class="menu-text">收货地址</view>
@@ -54,10 +63,10 @@
       <view class="menu-right">›</view>
     </view>
 
-    <view class="menu-item" bindtap="handleCoupon">
+    <view class="menu-item" bindtap="handleMerchant">
       <view class="menu-left">
-        <view class="menu-icon">🎟️</view>
-        <view class="menu-text">优惠券</view>
+        <view class="menu-icon">🏬</view>
+        <view class="menu-text">商家平台</view>
       </view>
       <view class="menu-right">›</view>
     </view>
@@ -79,8 +88,8 @@
     </view>
   </view>
 
-  <!-- 退出登录按钮 -->
   <view class="logout-section">
     <button class="logout-btn" bindtap="logout">退出登录</button>
   </view>
 </view>
+

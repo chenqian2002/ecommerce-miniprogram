@@ -8,48 +8,51 @@
 """
 
 import hashlib
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.database.database import get_db
+from app.database.models import UserModel
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
 
 def hash_password(password: str) -> str:
-    """
-    对密码进行加密
-    
-    为什么需要？
-    - 数据库中存的不是明文密码，而是加密后的值
-    - 即使数据库被黑，也无法直接得到用户密码
-    
-    原理：
-    - 使用 SHA256 算法进行哈希
-    - 同一个密码每次加密结果相同（便于验证）
-    
-    例如：
-        password = "123456"
-        encrypted = hash_password(password)
-        # encrypted = "8d969eef6ecad3c29a3a873fba8cac1..."
-        
-        verify_password("123456", encrypted)  # True
-        verify_password("wrong", encrypted)   # False
-    """
+    """对密码进行加密"""
     return hashlib.sha256(password.encode()).hexdigest()
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    验证密码是否正确
-    
-    参数：
-    - plain_password: 用户输入的原始密码（明文）
-    - hashed_password: 数据库中存储的加密密码
-    
-    返回：
-    - True: 密码匹配
-    - False: 密码错误
-    
-    流程：
-        用户输入 "123456"
-            ↓
-        verify_password("123456", "8d969eef...")
-            ↓
-        对比两个 hash 值是否相同
-            ↓
-        返回 True 或 False
-    """
+    """验证密码是否正确"""
     return hash_password(plain_password) == hashed_password
+
+
+def decode_access_token(token: str) -> int:
+    """解析 JWT，返回用户ID"""
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        if user_id is None:
+            raise ValueError("token中缺少user_id")
+        return int(user_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的登录凭证",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    """从 token 解析当前用户"""
+    user_id = decode_access_token(token)
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="用户不存在")
+    return user

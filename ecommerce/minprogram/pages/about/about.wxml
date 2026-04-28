@@ -1,0 +1,22 @@
+<!--pages/about/about.wxml-->
+<view class="page">
+  <view class="title">关于我们</view>
+
+  <view class="card">
+    <view class="name">{{appName}}</view>
+    <view class="version">版本：{{version}}</view>
+    <view class="desc">{{intro}}</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">项目说明</view>
+    <view class="text">本项目包含商品浏览、购物车、结算下单、订单管理等核心电商流程。</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">当前已完成模块</view>
+    <view class="text" wx:for="{{sections}}" wx:key="index">• {{item}}</view>
+  </view>
+
+  <button class="back-btn" bindtap="goBack">返回上一页</button>
+</view>

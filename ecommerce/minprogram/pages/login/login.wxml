@@ -1,37 +1,58 @@
 <!--pages/login/login.wxml-->
-<view class="login-container">
-  <view class="login-content">
-    <view class="login-title">电商平台</view>
-    
-    <view class="form-item">
-      <text class="label">手机号</text>
-      <input 
-        class="input" 
-        type="text" 
-        placeholder="请输入手机号"
-        value="{{phone}}"
-        bindinput="handlePhoneChange"
-      />
+<view class="login-page">
+  <view class="bg-circle circle-1"></view>
+  <view class="bg-circle circle-2"></view>
+
+  <view class="login-card">
+    <view class="brand-badge">电商平台</view>
+    <view class="login-title">欢迎回来</view>
+    <view class="login-subtitle" wx:if="{{entry === 'merchant'}}">商家平台登录</view>
+    <view class="login-desc" wx:else>登录后即可浏览商品、加入购物车并提交订单</view>
+
+    <view class="form-group">
+      <view class="input-label">手机号</view>
+      <view class="input-wrap">
+        <text class="input-icon">📱</text>
+        <input
+          class="input"
+          type="text"
+          placeholder="请输入手机号"
+          value="{{phone}}"
+          bindinput="handlePhoneChange"
+        />
+      </view>
     </view>
 
-    <view class="form-item">
-      <text class="label">密码</text>
-      <input 
-        class="input" 
-        type="password" 
-        placeholder="请输入密码"
-        value="{{password}}"
-        bindinput="handlePasswordChange"
-      />
+    <view class="form-group">
+      <view class="input-label">密码</view>
+      <view class="input-wrap">
+        <text class="input-icon">🔒</text>
+        <input
+          class="input"
+          type="password"
+          placeholder="请输入密码"
+          value="{{password}}"
+          bindinput="handlePasswordChange"
+        />
+      </view>
     </view>
 
-    <button class="btn-login" bindtap="handleLogin" loading="{{loading}}" disabled="{{loading}}">
-      {{loading ? '登录中...' : '登录'}}
+    <button class="primary-btn" bindtap="handleLogin" loading="{{loading}}" disabled="{{loading}}">
+      {{loading ? '登录中...' : '账号密码登录'}}
     </button>
 
-    <view class="tips">
-      <text>测试账号: 13800138000</text>
-      <text>测试密码: 123456</text>
+    <button class="secondary-btn" bindtap="handleWechatLogin" loading="{{loading}}" disabled="{{loading}}">
+      {{loading ? '登录中...' : '微信一键登录'}}
+    </button>
+
+    <view class="tips-card">
+      <view class="tips-title">测试账号</view>
+      <view class="tips-item">商家账号：13800138000 / 123456</view>
+      <view class="tips-item">买家账号：13800138001 / 123456</view>
+      <view class="tips-item">买家账号：13800138002 / 123456</view>
+      <view class="tips-item merchant-tip" wx:if="{{entry === 'merchant'}}">商家入口需要使用商家账号登录</view>
     </view>
   </view>
 </view>
+
+

@@ -1,0 +1,39 @@
+<!--pages/product-detail/product-detail.wxml-->
+<view class="page">
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <view wx:elif="{{product}}" class="detail-page">
+    <swiper class="banner" indicator-dots autoplay interval="5000" duration="500">
+      <swiper-item>
+        <view class="banner-item">🍔</view>
+      </swiper-item>
+      <swiper-item>
+        <view class="banner-item">🛍️</view>
+      </swiper-item>
+    </swiper>
+
+    <view class="card">
+      <view class="title-row">
+        <view class="title">{{product.name}}</view>
+        <view class="favorite-btn {{isFavorite ? 'active' : ''}}" bindtap="toggleFavorite">
+          {{isFavorite ? '已收藏' : '收藏'}}
+        </view>
+      </view>
+      <view class="price">¥{{product.price}}</view>
+      <view class="stock">库存：{{product.stock}}</view>
+      <view class="desc">{{product.description || '商品详情暂无描述'}}</view>
+    </view>
+
+    <view class="card" wx:if="{{product.original_price}}">
+      <view class="section-title">原价信息</view>
+      <view class="original-price">¥{{product.original_price}}</view>
+    </view>
+
+    <view class="actions">
+      <button class="action-btn cart-btn" bindtap="addToCart">加入购物车</button>
+      <button class="action-btn buy-btn" bindtap="buyNow">立即购买</button>
+    </view>
+  </view>
+
+  <view wx:else class="empty">商品不存在或已下架</view>
+</view>

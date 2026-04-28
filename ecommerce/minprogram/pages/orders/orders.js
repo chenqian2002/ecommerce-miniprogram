@@ -1,5 +1,13 @@
 // pages/orders/orders.js
-import { get } from '../../utils/request';
+import { get, put } from '../../utils/request';
+
+const STATUS_TEXT = {
+  pending: '待付款',
+  paid: '待发货',
+  shipped: '已发货',
+  completed: '已完成',
+  cancelled: '已取消'
+};
 
 Page({
   data: {
@@ -9,13 +17,15 @@ Page({
   },
 
   onLoad() {
-    console.log('Orders page loaded');
     this.loadOrders();
   },
 
   onShow() {
-    // 页面显示时刷新订单
     this.loadOrders();
+  },
+
+  onPullDownRefresh() {
+    this.loadOrders(true);
   },
 
   switchTab(e) {
@@ -24,86 +34,104 @@ Page({
     this.loadOrders();
   },
 
-  loadOrders() {
+  loadOrders(fromPullDown = false) {
     this.setData({ loading: true });
 
-    try {
-      // 模拟订单数据
-      const mockOrders = [
-        {
-          id: 1,
-          order_no: 'ORD20260416001',
-          status: 'pending',
-          status_text: '待付款',
-          items: [
-            { product_id: 1, name: '汉堡包', price: 15.99, quantity: 2 },
-            { product_id: 2, name: '可乐', price: 5.99, quantity: 1 }
-          ],
-          total_items: 3,
-          total_amount: 37.97,
-          created_at: '2026-04-16 10:30:00'
-        },
-        {
-          id: 2,
-          order_no: 'ORD20260416002',
-          status: 'shipped',
-          status_text: '已发货',
-          items: [
-            { product_id: 3, name: '鸡腿套餐', price: 28.99, quantity: 1 }
-          ],
-          total_items: 1,
-          total_amount: 28.99,
-          created_at: '2026-04-15 15:20:00'
-        },
-        {
-          id: 3,
-          order_no: 'ORD20260416003',
-          status: 'received',
-          status_text: '已收货',
-          items: [
-            { product_id: 4, name: '薯条', price: 8.99, quantity: 3 }
-          ],
-          total_items: 3,
-          total_amount: 26.97,
-          created_at: '2026-04-14 12:00:00'
+    get('/orders')
+      .then(res => {
+        let orders = Array.isArray(res) ? res : (res.data || []);
+        if (this.data.orderStatus !== 'all') {
+          orders = orders.filter(o => o.status === this.data.orderStatus);
         }
-      ];
 
-      // 根据选择的状态过滤
-      let filtered = mockOrders;
-      if (this.data.orderStatus !== 'all') {
-        filtered = mockOrders.filter(o => o.status === this.data.orderStatus);
-      }
+        orders = orders.map(o => ({
+          ...o,
+          order_no: o.order_number,
+          status_text: STATUS_TEXT[o.status] || o.status,
+          total_items: o.item_count || 0,
+          total_amount: o.total_price || 0,
+          items: o.items || []
+        }));
 
-      this.setData({ 
-        orders: filtered,
-        loading: false
+        this.setData({ orders });
+      })
+      .catch(error => {
+        console.error('Load orders error:', error);
+        this.setData({ orders: [] });
+        wx.showToast({ title: '加载失败', icon: 'none' });
+      })
+      .finally(() => {
+        this.setData({ loading: false });
+        if (fromPullDown) wx.stopPullDownRefresh();
       });
-      
-      console.log('Orders loaded:', filtered.length);
-    } catch (error) {
-      console.error('Load orders error:', error);
-      this.setData({ loading: false });
-      wx.showToast({
-        title: '加载失败',
-        icon: 'none'
-      });
-    }
   },
 
   detailOrder(e) {
     const orderId = e.currentTarget.dataset.orderId;
-    wx.showToast({
-      title: '订单详情功能开发中',
-      icon: 'none'
+    wx.navigateTo({
+      url: `/pages/order-detail/order-detail?orderId=${orderId}`
     });
   },
 
   payOrder(e) {
     const orderId = e.currentTarget.dataset.orderId;
-    wx.showToast({
-      title: '支付功能开发中',
-      icon: 'none'
+    wx.showModal({
+      title: '立即支付',
+      content: '是否确认支付该订单？',
+      success: (res) => {
+        if (!res.confirm) return;
+        wx.showLoading({ title: '支付中...' });
+        put(`/orders/${orderId}/pay`)
+          .then(() => {
+            wx.showToast({ title: '支付成功', icon: 'success' });
+            this.loadOrders();
+          })
+          .catch(error => {
+            console.error('Pay order error:', error);
+            wx.showToast({ title: error?.message || error?.detail || '支付失败', icon: 'none' });
+          })
+          .finally(() => {
+            wx.hideLoading();
+          });
+      }
+    });
+  },
+
+  cancelOrder(e) {
+    const orderId = e.currentTarget.dataset.orderId;
+    wx.showModal({
+      title: '取消订单',
+      content: '是否确认取消该订单？',
+      success: (res) => {
+        if (!res.confirm) return;
+        wx.showLoading({ title: '处理中...' });
+        put(`/orders/${orderId}/cancel`)
+          .then(() => {
+            wx.showToast({ title: '订单已取消', icon: 'success' });
+            this.loadOrders();
+          })
+          .catch(error => {
+            console.error('Cancel order error:', error);
+            wx.showToast({ title: error?.message || error?.detail || '取消失败', icon: 'none' });
+          })
+          .finally(() => {
+            wx.hideLoading();
+          });
+      }
+    });
+  },
+
+    goToProducts() {
+    wx.switchTab({
+      url: '/pages/products/products'
+    });
+  },
+
+  goBack() {
+    wx.switchTab({
+      url: '/pages/products/products'
     });
   }
 });
+
+
