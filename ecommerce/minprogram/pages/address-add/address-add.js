@@ -1,5 +1,6 @@
 // pages/address-add/address-add.js
 import { get, post, put } from '../../utils/request';
+import { ensureLoggedIn } from '../../utils/auth';
 
 Page({
   data: {
@@ -18,6 +19,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!ensureLoggedIn()) return;
     const addressId = options.addressId ? parseInt(options.addressId) : null;
     if (addressId) {
       this.setData({

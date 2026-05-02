@@ -1,5 +1,6 @@
 // pages/favorites/favorites.js
 import { getStorage, setStorage } from '../../utils/storage';
+import { ensureLoggedIn } from '../../utils/auth';
 
 Page({
   data: {
@@ -8,6 +9,7 @@ Page({
   },
 
   onShow() {
+    if (!ensureLoggedIn()) return;
     this.loadFavorites();
   },
 

@@ -1,19 +1,30 @@
 // pages/products/products.js
 import { get, post } from '../../utils/request';
+import { ensureLoggedIn } from '../../utils/auth';
+
 
 Page({
   data: {
     allProducts: [],
     products: [],
     categories: [],
-    currentCategoryId: 0,
+    currentCategoryId: 'all',
     currentKeyword: '',
     sortBy: 'default',
     searchValue: '',
+    skeletonProducts: [1, 2, 3, 4],
     loading: false,
+    addingProductId: null,
     cartMap: {},
     cartCount: 0,
     cartTotal: 0,
+    itemQtyMap: {},
+    announcementVisible: false,
+    announcement: {
+      id: null,
+      title: '平台公告',
+      content: ''
+    },
     sortOptions: [
       { label: '默认', value: 'default' },
       { label: '销量', value: 'sales' },
@@ -23,11 +34,17 @@ Page({
   },
 
   onLoad() {
+    if (!ensureLoggedIn()) return;
     this.loadPageData();
+    this.loadAnnouncement();
   },
 
-    onShow() {
-    this.loadCart();
+  onShow() {
+    this.loadProducts().then(() => this.applyFilters());
+    const token = wx.getStorageSync('token');
+    if (token) {
+      this.loadCart();
+    }
   },
 
   onPullDownRefresh() {
@@ -47,24 +64,85 @@ Page({
       });
   },
 
-  loadCategories() {
-    const fixedCategories = [
-      { id: 0, name: '全部' },
-      { id: 1, name: '热销' },
-      { id: 2, name: '促销' }
-    ];
+  loadAnnouncement() {
+    if (this.data.announcementVisible) return Promise.resolve();
 
-    this.setData({ categories: fixedCategories });
-    return Promise.resolve(fixedCategories);
+    return get('/announcement')
+      .then(res => {
+        const announcement = res || {};
+        const hasContent = announcement.is_active && (announcement.content || '').trim() && (announcement.content || '').trim() !== '暂无公告';
+
+        if (!hasContent) return null;
+
+        this.setData({
+          announcementVisible: true,
+          announcement: {
+            id: announcement.id || null,
+            title: announcement.title || '平台公告',
+            content: announcement.content || ''
+          }
+        });
+        return announcement;
+      })
+      .catch(err => {
+        console.error('Load announcement error:', err);
+        return null;
+      });
+  },
+
+  closeAnnouncement() {
+    this.setData({
+      announcementVisible: false,
+      announcement: {
+        id: null,
+        title: '平台公告',
+        content: ''
+      }
+    });
+  },
+
+  loadCategories() {
+    return get('/categories')
+      .then(res => {
+        const merchantCategories = Array.isArray(res) ? res : (res.data || []);
+        const categories = [
+          { key: 'all', name: '全部' },
+          { key: 'hot', name: '热销' },
+          { key: 'promo', name: '促销' },
+          ...merchantCategories.map(item => ({
+            ...item,
+            key: `cat-${item.id}`,
+            category_id: item.id
+          }))
+        ];
+        this.setData({ categories });
+        return categories;
+      })
+      .catch(err => {
+        console.error('Load categories error:', err);
+        const fallbackCategories = [
+          { key: 'all', name: '全部' },
+          { key: 'hot', name: '热销' },
+          { key: 'promo', name: '促销' }
+        ];
+        this.setData({ categories: fallbackCategories });
+        return fallbackCategories;
+      });
   },
 
   loadProducts() {
     return get('/products?page=1&page_size=100')
       .then(res => {
-        const products = (Array.isArray(res) ? res : (res.data || [])).map(item => ({
-          ...item,
-          description: item.description || '精选好物，品质推荐'
-        }));
+        const products = (Array.isArray(res) ? res : (res.data || [])).map(item => {
+          const stock = Number(item.stock || 0);
+          return {
+            ...item,
+            stock,
+            isSoldOut: stock <= 0,
+            description: item.description || '精选好物，品质推荐'
+          };
+        });
+
         this.setData({ allProducts: products });
         return products;
       })
@@ -101,19 +179,19 @@ Page({
 
   applyFilters() {
     let list = [...this.data.allProducts];
+    const currentCategoryId = this.data.currentCategoryId;
 
-    if (this.data.currentCategoryId) {
-      list = list.filter(item => item.category_id === this.data.currentCategoryId);
-    }
-
-    if (this.data.currentCategoryId === 1) {
+    if (currentCategoryId === 'hot') {
       list.sort((a, b) => (b.sales || 0) - (a.sales || 0));
-    } else if (this.data.currentCategoryId === 2) {
+    } else if (currentCategoryId === 'promo') {
       list = list.filter(item => {
         const hasPromoFlag = item.is_promo || item.promo || item.promotion;
         const hasDiscount = typeof item.original_price === 'number' && typeof item.price === 'number' && item.original_price > item.price;
         return hasPromoFlag || hasDiscount;
       });
+    } else if (typeof currentCategoryId === 'string' && currentCategoryId.indexOf('cat-') === 0) {
+      const categoryId = Number(currentCategoryId.replace('cat-', ''));
+      list = list.filter(item => Number(item.category_id) === categoryId);
     }
 
     if (this.data.currentKeyword) {
@@ -169,27 +247,64 @@ Page({
   },
 
   selectCategory(e) {
-    const categoryId = parseInt(e.currentTarget.dataset.id, 10);
-    if (Number.isNaN(categoryId)) return;
+    const categoryId = e.currentTarget.dataset.id || 'all';
     this.setData({ currentCategoryId: categoryId }, () => this.applyFilters());
+  },
+
+  // 数量选择器
+  handleDecreaseQty(e) {
+    const productId = parseInt(e.currentTarget.dataset.productId, 10);
+    const map = { ...this.data.itemQtyMap };
+    const current = map[productId] || 1;
+    if (current > 1) {
+      map[productId] = current - 1;
+      this.setData({ itemQtyMap: map });
+    }
+  },
+
+  handleIncreaseQty(e) {
+    const productId = parseInt(e.currentTarget.dataset.productId, 10);
+    const product = this.data.allProducts.find(p => p.id === productId);
+    const maxStock = product ? product.stock : 99;
+    const map = { ...this.data.itemQtyMap };
+    const current = map[productId] || 1;
+    if (current < maxStock) {
+      map[productId] = current + 1;
+      this.setData({ itemQtyMap: map });
+    } else {
+      wx.showToast({ title: '已达到库存上限', icon: 'none' });
+    }
   },
 
   handleAddToCart(e) {
     const productId = parseInt(e.currentTarget.dataset.productId, 10);
+    if (this.data.addingProductId) return;
+
     const product = this.data.allProducts.find(item => item.id === productId);
     if (!product) return;
 
+    if (Number(product.stock || 0) <= 0) {
+      wx.showToast({ title: '商品已售罄', icon: 'none' });
+      return;
+    }
+
+    const quantity = this.data.itemQtyMap[productId] || 1;
+
+    this.setData({ addingProductId: productId });
     post('/cart/add', {
       product_id: product.id,
-      quantity: 1
+      quantity: quantity
     })
       .then(() => {
-        wx.showToast({ title: '已添加到购物车', icon: 'success', duration: 1000 });
+        wx.showToast({ title: `已添加 ${quantity} 件到购物车`, icon: 'success', duration: 1000 });
         this.loadCart();
       })
       .catch(err => {
         console.error('Add to cart error:', err);
-        wx.showToast({ title: '添加失败', icon: 'none' });
+        wx.showToast({ title: err.message || '添加失败', icon: 'none' });
+      })
+      .finally(() => {
+        this.setData({ addingProductId: null });
       });
   },
 
@@ -198,7 +313,6 @@ Page({
       wx.showToast({ title: '购物车是空的', icon: 'none' });
       return;
     }
-
     wx.navigateTo({ url: '/pages/checkout/checkout' });
   },
 
@@ -214,9 +328,3 @@ Page({
     });
   }
 });
-
-
-
-
-
-

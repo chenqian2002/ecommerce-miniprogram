@@ -100,16 +100,21 @@
   margin-bottom: 10rpx;
 }
 
-.item-price {
-  color: #ef4444;
-  font-size: 28rpx;
-  font-weight: 800;
-}
-
 .remove-btn {
   background: #f8fafc;
   color: #475569;
   border-radius: 999rpx;
   font-size: 24rpx;
+  border: 1rpx solid #e2e8f0;
+}
+
+.footer-actions {
+  padding: 12rpx 0 24rpx;
+}
+
+.back-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.96);
+  color: #0f172a;
   border: 1rpx solid #e2e8f0;
 }

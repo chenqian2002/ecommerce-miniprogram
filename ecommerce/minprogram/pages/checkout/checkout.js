@@ -1,5 +1,7 @@
 // pages/checkout/checkout.js
 import { get, post, put } from '../../utils/request';
+import { ensureLoggedIn } from '../../utils/auth';
+import { CUSTOMER_SERVICE_WECHAT, CUSTOMER_SERVICE_QR_CODE } from '../../utils/config';
 
 Page({
   data: {
@@ -10,16 +12,20 @@ Page({
     submitting: false,
     loadingCart: false,
     loadingAddresses: false,
-    debugOrderRes: null,
-    debugPayRes: null
+    serviceDialogVisible: false,
+    customerWechat: CUSTOMER_SERVICE_WECHAT,
+    customerQrCode: CUSTOMER_SERVICE_QR_CODE,
+    latestOrderId: null
   },
 
   onLoad() {
+    if (!ensureLoggedIn()) return;
     this.setData({ selectedAddressId: null });
     this.loadCheckoutData();
   },
 
   onShow() {
+    if (!ensureLoggedIn()) return;
     this.setData({ selectedAddressId: null });
     this.loadCheckoutData();
   },
@@ -93,6 +99,45 @@ Page({
     this.setData({ selectedAddressId: addressId });
   },
 
+  copyCustomerWechat() {
+    wx.setClipboardData({
+      data: this.data.customerWechat,
+      success: () => wx.showToast({ title: '微信号已复制', icon: 'success' })
+    });
+  },
+
+  closeServiceDialog() {
+    this.setData({ serviceDialogVisible: false });
+    wx.reLaunch({ url: '/pages/orders/orders' });
+  },
+
+  viewLatestOrder() {
+    const { latestOrderId } = this.data;
+    this.setData({ serviceDialogVisible: false });
+    if (latestOrderId) {
+      wx.reLaunch({ url: `/pages/order-detail/order-detail?orderId=${latestOrderId}` });
+      return;
+    }
+    wx.reLaunch({ url: '/pages/orders/orders' });
+  },
+
+  // 请求订阅消息授权
+  requestSubscribe() {
+    return new Promise((resolve) => {
+      wx.requestSubscribeMessage({
+        tmplIds: ['发货通知模板ID', '支付成功模板ID'],
+        success(res) {
+          console.log('[Subscribe] 用户授权结果:', res);
+          resolve(res);
+        },
+        fail(err) {
+          console.warn('[Subscribe] 授权失败:', err);
+          resolve(null);
+        }
+      });
+    });
+  },
+
   handleSubmitOrder() {
     const { cart, selectedAddressId, submitting } = this.data;
 
@@ -106,44 +151,47 @@ Page({
       return;
     }
 
-    this.setData({ submitting: true, debugOrderRes: null, debugPayRes: null });
-    this.debugPrint('submit-start', { selectedAddressId, cartLength: cart.length, totalPrice: this.data.totalPrice });
+    // 先请求订阅消息授权（不影响下单流程）
+    this.requestSubscribe().then(() => {
+      this.doSubmitOrder(selectedAddressId);
+    });
+  },
+
+  doSubmitOrder(selectedAddressId) {
+    const { cart } = this.data;
+    this.setData({ submitting: true });
 
     wx.showLoading({ title: '正在创建订单...' });
-    this.createOrderStep(selectedAddressId)
-      .then(orderRes => {
-        this.debugPrint('order-response', orderRes);
-        this.setData({ debugOrderRes: orderRes });
+    const cartItems = cart.map(item => ({
+      product_id: item.product_id,
+      quantity: item.quantity
+    }));
 
-        const orderData = orderRes?.order || orderRes?.data?.order || orderRes?.data || orderRes;
-        const orderId = orderData?.id;
-        if (!orderId) {
-          throw new Error('创建订单成功，但未返回订单ID');
-        }
+    post('/orders', {
+      address_id: selectedAddressId,
+      payment_method: 'mock',
+      cart_items: cartItems
+    })
+      .then(orderRes => {
+        const orderId = orderRes?.order_id || orderRes?.order?.id;
+        if (!orderId) throw new Error('创建订单成功，但未返回订单ID');
 
         wx.hideLoading();
         wx.showLoading({ title: '正在完成支付...' });
-        return this.payMockOrder(orderId).then(payRes => ({ orderData, payRes }));
+        return put(`/orders/${orderId}/pay`).then(payRes => ({ orderId, payRes }));
       })
-      .then(({ orderData, payRes }) => {
-        this.debugPrint('payment-response', payRes);
-        this.setData({ debugPayRes: payRes });
-
+      .then(({ orderId }) => {
+        this.setData({ latestOrderId: orderId });
         wx.hideLoading();
         wx.showToast({ title: '下单成功', icon: 'success' });
         setTimeout(() => {
-          wx.switchTab({ url: '/pages/orders/orders' });
-        }, 1200);
+          this.setData({ serviceDialogVisible: true });
+        }, 1000);
       })
       .catch(error => {
         wx.hideLoading();
-        const message = this.getErrorMessage(error, '下单失败');
-        this.debugPrint('submit-error', error);
-        wx.showToast({
-          title: message,
-          icon: 'none',
-          duration: 2000
-        });
+        const message = error?.message || error?.detail || '下单失败';
+        wx.showToast({ title: message, icon: 'none', duration: 2000 });
       })
       .finally(() => {
         wx.hideLoading();

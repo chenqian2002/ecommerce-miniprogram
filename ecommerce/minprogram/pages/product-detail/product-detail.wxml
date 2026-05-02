@@ -1,14 +1,31 @@
 <!--pages/product-detail/product-detail.wxml-->
 <view class="page">
-  <view wx:if="{{loading}}" class="loading">加载中...</view>
+  <view wx:if="{{loading}}" class="app-skeleton">
+    <view class="skeleton-block skeleton-radius-lg" style="width: 100%; height: 420rpx; margin-bottom: 24rpx;"></view>
+    <view class="skeleton-card" style="margin-bottom: 20rpx;">
+      <view class="skeleton-row" style="margin-bottom: 18rpx;">
+        <view class="skeleton-block skeleton-line-lg skeleton-radius-round" style="width: 65%;"></view>
+        <view class="skeleton-block skeleton-line-lg skeleton-radius-round" style="width: 120rpx;"></view>
+      </view>
+      <view class="skeleton-block skeleton-line-lg skeleton-radius-round" style="width: 34%;"></view>
+      <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 42%;"></view>
+      <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 100%;"></view>
+      <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 86%;"></view>
+    </view>
+    <view class="skeleton-card">
+      <view class="skeleton-block skeleton-line-lg skeleton-radius-round" style="width: 38%;"></view>
+      <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 100%;"></view>
+      <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 72%;"></view>
+    </view>
+  </view>
 
   <view wx:elif="{{product}}" class="detail-page">
     <swiper class="banner" indicator-dots autoplay interval="5000" duration="500">
-      <swiper-item>
-        <view class="banner-item">🍔</view>
+      <swiper-item wx:if="{{product.image_url}}">
+        <image class="banner-img" src="{{product.image_url}}" mode="aspectFill" />
       </swiper-item>
-      <swiper-item>
-        <view class="banner-item">🛍️</view>
+      <swiper-item wx:else>
+        <view class="banner-item">📦</view>
       </swiper-item>
     </swiper>
 
@@ -20,7 +37,9 @@
         </view>
       </view>
       <view class="price">¥{{product.price}}</view>
-      <view class="stock">库存：{{product.stock}}</view>
+      <view class="stock {{product.isSoldOut ? 'sold-out' : ''}}">
+        {{product.isSoldOut ? '库存：已售罄' : '库存：' + product.stock}}
+      </view>
       <view class="desc">{{product.description || '商品详情暂无描述'}}</view>
     </view>
 
@@ -29,9 +48,41 @@
       <view class="original-price">¥{{product.original_price}}</view>
     </view>
 
+    <view class="card" wx:if="{{!product.isSoldOut}}">
+      <view class="section-title">购买数量</view>
+      <view class="detail-qty-row">
+        <view class="detail-qty-btn" bindtap="handleDecreaseQty">-</view>
+        <view class="detail-qty-value">{{quantity}}</view>
+        <view class="detail-qty-btn" bindtap="handleIncreaseQty">+</view>
+      </view>
+    </view>
+
+    <view class="card service-card">
+      <view class="section-title">联系商家客服</view>
+      <view class="service-desc">下单前有任何问题，可以先添加客服微信咨询。</view>
+      <view class="service-row">
+        <view class="service-info">
+          <view class="service-label">客服微信</view>
+          <view class="service-wechat">{{customerWechat}}</view>
+          <button class="copy-service-btn" bindtap="copyCustomerWechat">复制微信号</button>
+        </view>
+        <image wx:if="{{customerQrCode}}" class="service-qrcode" src="{{customerQrCode}}" mode="aspectFit" bindtap="previewCustomerQrCode" />
+      </view>
+    </view>
+
     <view class="actions">
-      <button class="action-btn cart-btn" bindtap="addToCart">加入购物车</button>
-      <button class="action-btn buy-btn" bindtap="buyNow">立即购买</button>
+      <button
+        class="action-btn cart-btn"
+        bindtap="addToCart"
+        loading="{{addingToCart}}"
+        disabled="{{product.isSoldOut || addingToCart || buyingNow}}"
+      >{{product.isSoldOut ? '已售罄' : (addingToCart ? '添加中' : '加入购物车')}}</button>
+      <button
+        class="action-btn buy-btn"
+        bindtap="buyNow"
+        loading="{{buyingNow}}"
+        disabled="{{product.isSoldOut || addingToCart || buyingNow}}"
+      >{{product.isSoldOut ? '已售罄' : (buyingNow ? '处理中' : '立即购买')}}</button>
     </view>
   </view>
 

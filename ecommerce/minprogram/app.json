@@ -1,5 +1,6 @@
 {
     "pages": [
+    "pages/index/index",
     "pages/login/login",
     "pages/products/products",
     "pages/product-detail/product-detail",
@@ -22,12 +23,16 @@
     "navigationBarTextStyle": "white",
     "backgroundColor": "#F5F5F5"
   },
-  "tabBar": {
+    "tabBar": {
     "color": "#666666",
     "selectedColor": "#ff6b35",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "black",
     "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "🏠 首页"
+      },
       {
         "pagePath": "pages/products/products",
         "text": "🏪 商品"

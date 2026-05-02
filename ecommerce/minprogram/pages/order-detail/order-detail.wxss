@@ -71,13 +71,67 @@
   color: #0f172a;
 }
 
-.address-detail,
-.item-meta,
-.empty-address,
-.empty-items {
+.shipping-banner {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1d4ed8;
+  padding: 18rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  margin-bottom: 12rpx;
+}
+
+.shipping-desc {
   color: #64748b;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.service-card {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.service-desc {
+  color: #c2410c;
   font-size: 26rpx;
   line-height: 1.6;
+  margin-bottom: 10rpx;
+}
+
+.service-wechat {
+  color: #0f172a;
+  font-size: 30rpx;
+  font-weight: 800;
+  margin-bottom: 16rpx;
+}
+
+.service-qrcode {
+  width: 260rpx;
+  height: 260rpx;
+  display: block;
+  margin: 8rpx 0 18rpx;
+  border-radius: 18rpx;
+  background: #fff;
+  border: 1rpx solid #fed7aa;
+}
+
+.service-qrcode-tip {
+  margin-bottom: 16rpx;
+  color: #9a3412;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.copy-service-btn {
+  width: 240rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+  color: #fff;
+  font-size: 24rpx;
+  padding: 0;
 }
 
 .item-row {
@@ -125,6 +179,10 @@
   background: rgba(255, 255, 255, 0.94);
   color: #0f172a;
   border: 1rpx solid #e2e8f0;
+}
+
+.footer-actions {
+  padding: 12rpx 0 24rpx;
 }
 
 .back-btn {

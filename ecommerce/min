@@ -1,0 +1,12 @@
+import { API_BASE_URL, ENV_MODE_NAME, DEV_MODE } from './utils/config';
+
+App({
+  onLaunch() {
+    console.log(`[App] Environment: ${ENV_MODE_NAME}, DEV_MODE: ${DEV_MODE}`);
+    console.log(`[App] API: ${API_BASE_URL}`);
+  },
+
+  globalData: {
+    apiBaseUrl: API_BASE_URL
+  }
+});

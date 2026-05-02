@@ -5,6 +5,40 @@
     <view class="subtitle">商品上架、编辑与管理</view>
   </view>
 
+  <view class="card action-card">
+    <button class="announcement-manage-btn" bindtap="openAnnouncementEditor">公告管理</button>
+  </view>
+
+  <view class="card settings-card">
+    <view class="section-title">商家设置</view>
+    <view class="input-group">
+      <text class="label">微信支付商户号</text>
+      <input class="input" value="{{merchantSettingsForm.merchant_id}}" bindinput="handleMerchantSettingsInput" data-field="merchant_id" placeholder="请输入商户号，例如 1234567890" />
+    </view>
+    <view class="input-group">
+      <text class="label">公众号 AppID</text>
+      <input class="input" value="{{merchantSettingsForm.official_appid}}" bindinput="handleMerchantSettingsInput" data-field="official_appid" placeholder="请输入公众号 AppID" />
+    </view>
+    <view class="input-group">
+      <text class="label">公众号 Secret</text>
+      <input class="input" password="true" value="{{merchantSettingsForm.official_secret}}" bindinput="handleMerchantSettingsInput" data-field="official_secret" placeholder="请输入公众号 Secret" />
+    </view>
+    <view class="input-group">
+      <text class="label">客服微信号</text>
+      <input class="input" value="{{merchantSettingsForm.customer_service_wechat}}" bindinput="handleMerchantSettingsInput" data-field="customer_service_wechat" placeholder="请输入客服微信号" />
+    </view>
+    <view class="input-group">
+      <text class="label">客服二维码</text>
+      <view class="image-row">
+        <input class="input image-input" value="{{merchantSettingsForm.customer_service_qr_code}}" bindinput="handleMerchantSettingsInput" data-field="customer_service_qr_code" placeholder="上传后自动填入，或填写图片路径" />
+        <button class="upload-btn" bindtap="chooseQrCode" loading="{{uploadingQrCode}}">{{uploadingQrCode ? '上传中' : '上传二维码'}}</button>
+      </view>
+      <image wx:if="{{merchantSettingsForm.customer_service_qr_code}}" class="settings-qrcode-preview" src="{{merchantSettingsForm.customer_service_qr_code}}" mode="aspectFit" />
+      <view class="settings-tip">上传成功后请点击“保存商家设置”，买家订单详情会显示新二维码。</view>
+    </view>
+    <button class="settings-save-btn" bindtap="saveMerchantSettings" loading="{{merchantSettingsSaving}}">保存商家设置</button>
+  </view>
+
   <view class="card search-card">
     <view class="search-row">
       <input
@@ -71,9 +105,26 @@
 
     <view class="input-group">
       <text class="label">商品分类</text>
+      <view class="category-create-row">
+        <input class="input category-input" value="{{newCategoryName}}" bindinput="handleNewCategoryInput" placeholder="输入新分类名称，例如：手机配件" />
+        <button class="category-add-btn" bindtap="createCategory">添加分类</button>
+      </view>
       <picker mode="selector" range="{{categories}}" range-key="name" value="{{selectedCategoryIndex}}" bindchange="handleCategoryChange">
-        <view class="picker">{{categories[selectedCategoryIndex] ? categories[selectedCategoryIndex].name : '请选择分类'}}</view>
+        <view class="picker category-picker">{{categories[selectedCategoryIndex] ? categories[selectedCategoryIndex].name : '可选：请选择分类'}}</view>
       </picker>
+      <view wx:if="{{categories.length > 0}}" class="category-tags">
+        <view wx:for="{{categories}}" wx:key="id" class="category-tag {{form.category_id === item.id ? 'active' : ''}}">
+          <text class="category-tag-name">{{item.name}}</text>
+          <button
+            class="category-delete-btn"
+            bindtap="deleteCategory"
+            data-category-id="{{item.id}}"
+            data-category-name="{{item.name}}"
+            loading="{{deletingCategoryId === item.id}}"
+          >删除</button>
+        </view>
+      </view>
+      <view class="category-tip">分类由商家自定义；删除分类不会删除商品，只会让商品变成未分类。</view>
     </view>
 
     <view class="action-row">
@@ -83,10 +134,81 @@
   </view>
 
   <view class="card">
-    <view class="section-title">商品分类</view>
-    <view class="filter-row">
-      <view wx:for="{{filterTabs}}" wx:key="value" class="filter-item {{currentFilter === item.value ? 'active' : ''}}" bindtap="handleFilterChange" data-filter="{{item.value}}">
-        {{item.label}}
+    <view class="order-section-head">
+      <view>
+        <view class="section-title">订单管理</view>
+        <view class="sales-total">商品出售总额：¥{{salesTotal}}</view>
+      </view>
+      <button
+        class="clear-orders-btn"
+        bindtap="clearMerchantOrders"
+        loading="{{clearingOrders}}"
+        disabled="{{clearingOrders || merchantOrders.length === 0}}"
+      >
+        清除订单
+      </button>
+    </view>
+
+    <view class="order-stats-grid">
+      <view wx:for="{{orderStats}}" wx:key="type" class="order-stat-card stat-{{item.type}}">
+        <view class="order-stat-value">{{item.value}}</view>
+        <view class="order-stat-label">{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="order-filter-tabs">
+      <view
+        wx:for="{{orderStatusTabs}}"
+        wx:key="value"
+        class="order-filter-tab {{orderStatusFilter === item.value ? 'active' : ''}}"
+        bindtap="handleOrderStatusFilter"
+        data-status="{{item.value}}"
+      >{{item.label}}</view>
+    </view>
+
+    <view class="order-search-row">
+      <input
+        class="order-search-input"
+        placeholder="搜索订单号 / 商品 / 收货人 / 电话 / 地址"
+        value="{{orderSearchValue}}"
+        bindinput="handleOrderSearchInput"
+      />
+      <button class="order-search-clear" bindtap="clearOrderSearch">重置</button>
+    </view>
+
+    <view wx:if="{{ordersLoading}}" class="loading-text">订单加载中...</view>
+    <view wx:elif="{{merchantOrders.length === 0}}" class="empty-state">
+      <view class="empty-state-icon">🚚</view>
+      <view class="empty-state-title">暂无订单</view>
+      <view class="empty-state-desc">当前还没有需要处理的订单</view>
+    </view>
+    <view wx:else class="order-list">
+      <view wx:for="{{merchantOrders}}" wx:key="id" class="order-item">
+        <view class="order-main">
+          <view class="order-row-top">
+            <text class="order-no">{{item.order_number}}</text>
+            <text class="order-status {{item.status}}">{{item.status_text}}</text>
+          </view>
+          <view class="order-meta">共 {{item.total_items}} 件 · ¥{{item.total_amount}}</view>
+          <view class="order-info-block">
+            <view class="order-info-line"><text class="info-label">商品：</text>{{item.items_summary}}</view>
+            <view class="order-info-line"><text class="info-label">收货：</text>{{item.receiver_name}} {{item.receiver_phone}}</view>
+            <view class="order-info-line"><text class="info-label">地址：</text>{{item.address_text}}</view>
+          </view>
+          <view class="order-meta">下单时间：{{item.created_at}}</view>
+        </view>
+        <view class="order-actions">
+          <button
+            wx:if="{{item.status === 'paid'}}"
+            class="ship-btn"
+            bindtap="shipOrder"
+            data-order-id="{{item.id}}"
+            loading="{{shippingOrderId === item.id}}"
+          >
+            📦 已发货
+          </button>
+          <view wx:elif="{{item.status === 'shipped'}}" class="shipped-badge">🚚 已发货</view>
+        </view>
       </view>
     </view>
   </view>
@@ -115,5 +237,45 @@
 
   <view class="footer-actions">
     <button class="back-btn" bindtap="goBack">返回商城</button>
+  </view>
+
+  <view wx:if="{{announcementVisible}}" class="announcement-mask">
+    <view class="announcement-dialog">
+      <view class="announcement-header">
+        <view class="announcement-title">{{announcement.title || '平台公告'}}</view>
+      </view>
+      <view class="announcement-content">{{announcement.content}}</view>
+      <view class="announcement-actions">
+        <button class="announcement-close-btn" bindtap="closeAnnouncement">关闭公告</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{announcementEditorVisible}}" class="announcement-mask">
+    <view class="announcement-dialog announcement-editor-dialog">
+      <view class="announcement-header">
+        <view class="announcement-title">公告管理</view>
+      </view>
+
+      <view class="input-group">
+        <text class="label">公告标题</text>
+        <input class="input" value="{{announcementForm.title}}" bindinput="handleAnnouncementInput" data-field="title" placeholder="请输入公告标题" />
+      </view>
+
+      <view class="input-group">
+        <text class="label">公告内容</text>
+        <textarea class="textarea announcement-textarea" value="{{announcementForm.content}}" bindinput="handleAnnouncementInput" data-field="content" placeholder="请输入公告内容" />
+      </view>
+
+      <view class="switch-row">
+        <text class="label">是否启用</text>
+        <switch checked="{{announcementForm.is_active}}" bindchange="toggleAnnouncementActive" />
+      </view>
+
+      <view class="announcement-actions">
+        <button class="announcement-close-btn secondary" bindtap="closeAnnouncementEditor">取消</button>
+        <button class="announcement-close-btn primary" bindtap="submitAnnouncementForm" loading="{{announcementSaving}}">{{announcementSaving ? '保存中...' : '保存公告'}}</button>
+      </view>
+    </view>
   </view>
 </view>

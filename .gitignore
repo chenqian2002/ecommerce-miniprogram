@@ -1,0 +1,55 @@
+# Virtual environments
+.venv/
+.venv1/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Node modules
+node_modules/
+
+# Git
+.git/
+
+# Environment and secrets
+.env
+ecommerce/backend/.env
+
+# Database files
+*.db
+*.sqlite3
+
+# Upload files
+ecommerce/backend/uploads/
+ecommerce/backend/backend.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Compiled
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Other projects (only commit ecommerce)
+agent_web/
+brother-skill/
+claude_web_agent_py/
+InsightFactory/
+nodejs/
+pages/
+
+# Test/temp files
+*.pyc
+test_voice.py
+test_deepseek.py
+cpolar.exe
+ngrok.exe

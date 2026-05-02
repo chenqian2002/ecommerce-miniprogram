@@ -8,27 +8,14 @@
   </view>
 
   <view class="search-bar">
-    <input
-      class="search-input"
-      placeholder="搜索商品名称"
-      value="{{searchValue}}"
-      bindinput="handleSearchInput"
-      confirm-type="search"
-      bindconfirm="handleSearch"
-    />
+    <input class="search-input" placeholder="搜索商品名称" value="{{searchValue}}" bindinput="handleSearchInput" confirm-type="search" bindconfirm="handleSearch" />
     <button class="search-btn" bindtap="handleSearch">搜索</button>
     <button class="clear-btn" bindtap="clearSearch">重置</button>
   </view>
 
   <scroll-view class="sort-scroll" scroll-x>
     <view class="sort-list">
-      <view
-        wx:for="{{sortOptions}}"
-        wx:key="value"
-        class="sort-item {{sortBy === item.value ? 'active' : ''}}"
-        bindtap="changeSort"
-        data-sort="{{item.value}}"
-      >
+      <view wx:for="{{sortOptions}}" wx:key="value" class="sort-item {{sortBy === item.value ? 'active' : ''}}" bindtap="changeSort" data-sort="{{item.value}}">
         {{item.label}}
       </view>
     </view>
@@ -48,45 +35,54 @@
 
   <scroll-view class="category-scroll" scroll-x>
     <view class="category-list">
-      <view
-        wx:for="{{categories}}"
-        wx:key="id"
-        class="category-item {{currentCategoryId === item.id ? 'active' : ''}}"
-        bindtap="selectCategory"
-        data-id="{{item.id}}"
-      >
+      <view wx:for="{{categories}}" wx:key="key" class="category-item {{currentCategoryId === item.key ? 'active' : ''}}" bindtap="selectCategory" data-id="{{item.key}}">
         {{item.name}}
       </view>
     </view>
   </scroll-view>
 
   <view class="content">
-    <view wx:if="{{loading}}" class="loading">
-      <text>加载中...</text>
+    <view wx:if="{{loading}}" class="app-skeleton skeleton-grid">
+      <view wx:for="{{skeletonProducts}}" wx:key="*this" class="skeleton-card">
+        <view class="skeleton-block skeleton-product-image"></view>
+        <view class="skeleton-block skeleton-line-lg skeleton-radius-round" style="width: 80%;"></view>
+        <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 100%;"></view>
+        <view class="skeleton-row">
+          <view class="skeleton-block skeleton-line-lg skeleton-radius-round" style="width: 38%;"></view>
+          <view class="skeleton-block skeleton-line-lg skeleton-radius-round" style="width: 46%;"></view>
+        </view>
+      </view>
     </view>
 
-    <view wx:elif="{{products.length === 0}}" class="empty">
-      <text>{{currentKeyword ? '没有找到相关商品' : '暂无商品'}}</text>
+    <view wx:elif="{{products.length === 0}}" class="app-empty">
+      <view class="app-empty-icon">{{currentKeyword ? '🔍' : '📦'}}</view>
+      <view class="app-empty-title">{{currentKeyword ? '没有找到相关商品' : '暂无商品'}}</view>
+      <view class="app-empty-desc">{{currentKeyword ? '换个关键词试试，或点击重置查看全部商品' : '商家还没有上架商品，请稍后再来看看'}}</view>
+      <button wx:if="{{currentKeyword}}" class="app-empty-btn" bindtap="clearSearch">重置搜索</button>
     </view>
 
     <view wx:else class="product-grid">
-      <view
-        wx:for="{{products}}"
-        wx:key="id"
-        class="product-card"
-        bindtap="goToDetail"
-        data-product-id="{{item.id}}"
-      >
+      <view wx:for="{{products}}" wx:key="id" class="product-card" bindtap="goToDetail" data-product-id="{{item.id}}">
         <view class="product-image">
-          <view class="image-placeholder">🍔</view>
+          <image wx:if="{{item.image_url}}" class="product-img" src="{{item.image_url}}" mode="aspectFill" lazy-load="true"></image>
+          <view wx:else class="image-placeholder">📦</view>
+          <view wx:if="{{item.isSoldOut}}" class="sold-out-badge">已售罄</view>
         </view>
+
         <view class="product-info">
           <view class="product-name">{{item.name}}</view>
           <view class="product-desc">{{item.description || '精选好物'}}</view>
           <view class="product-footer">
             <view class="product-price">¥{{item.price}}</view>
-            <button class="add-btn" catchtap="handleAddToCart" data-product-id="{{item.id}}">加入购物车</button>
+            <view class="qty-picker">
+              <view class="qty-btn" catchtap="handleDecreaseQty" data-product-id="{{item.id}}">-</view>
+              <view class="qty-value">{{itemQtyMap[item.id] || 1}}</view>
+              <view class="qty-btn" catchtap="handleIncreaseQty" data-product-id="{{item.id}}">+</view>
+            </view>
           </view>
+          <button class="add-btn {{item.isSoldOut ? 'disabled' : ''}}" catchtap="handleAddToCart" data-product-id="{{item.id}}" loading="{{addingProductId === item.id}}" disabled="{{item.isSoldOut || addingProductId === item.id}}">
+            {{item.isSoldOut ? '已售罄' : (addingProductId === item.id ? '添加中' : '加入购物车')}}
+          </button>
         </view>
       </view>
     </view>
@@ -99,14 +95,21 @@
     </view>
     <view class="cart-info">
       <view class="cart-price">¥{{cartTotal}}</view>
-      <view class="cart-tip">另需配送费￥3</view>
     </view>
     <button class="checkout-btn {{cartCount > 0 ? 'active' : ''}}" bindtap="handleCheckout">
       {{cartCount > 0 ? '去结算' : '￥20 起送'}}
     </button>
   </view>
+
+  <view wx:if="{{announcementVisible}}" class="announcement-mask">
+    <view class="announcement-dialog">
+      <view class="announcement-header">
+        <view class="announcement-title">{{announcement.title || '平台公告'}}</view>
+      </view>
+      <view class="announcement-content">{{announcement.content}}</view>
+      <view class="announcement-actions">
+        <button class="announcement-close-btn" bindtap="closeAnnouncement">关闭公告</button>
+      </view>
+    </view>
+  </view>
 </view>
-
-
-
-

@@ -1,5 +1,6 @@
 // pages/order-detail/order-detail.js
 import { get, put } from '../../utils/request';
+import { CUSTOMER_SERVICE_WECHAT, CUSTOMER_SERVICE_QR_CODE } from '../../utils/config';
 
 const STATUS_TEXT = {
   pending: '待付款',
@@ -14,7 +15,9 @@ Page({
     orderId: null,
     order: null,
     loading: false,
-    actioning: false
+    actioning: false,
+    customerWechat: CUSTOMER_SERVICE_WECHAT,
+    customerQrCode: CUSTOMER_SERVICE_QR_CODE
   },
 
   onLoad(options) {
@@ -25,6 +28,7 @@ Page({
     }
 
     this.setData({ orderId });
+    this.loadPublicSettings();
     this.loadOrderDetail(orderId);
   },
 
@@ -34,6 +38,19 @@ Page({
     } else {
       wx.stopPullDownRefresh();
     }
+  },
+
+  loadPublicSettings() {
+    get('/settings/public')
+      .then(settings => {
+        this.setData({
+          customerWechat: settings.customer_service_wechat || CUSTOMER_SERVICE_WECHAT,
+          customerQrCode: settings.customer_service_qr_code || CUSTOMER_SERVICE_QR_CODE
+        });
+      })
+      .catch(err => {
+        console.error('Load public settings error:', err);
+      });
   },
 
   loadOrderDetail(orderId, fromPullDown = false) {
@@ -74,7 +91,18 @@ Page({
         this.setData({ actioning: true });
         put(`/orders/${orderId}/pay`)
           .then(() => {
-            wx.showToast({ title: '支付成功', icon: 'success' });
+            const customerWechat = this.data.customerWechat || CUSTOMER_SERVICE_WECHAT;
+            wx.showModal({
+              title: '支付成功',
+              content: `请务必添加客服微信 ${customerWechat}，客服会发送物流图片。`,
+              confirmText: '复制微信',
+              cancelText: '稍后添加',
+              success: (modalRes) => {
+                if (modalRes.confirm) {
+                  wx.setClipboardData({ data: customerWechat });
+                }
+              }
+            });
             this.loadOrderDetail(orderId);
           })
           .catch(error => {
@@ -115,30 +143,10 @@ Page({
     });
   },
 
-  confirmReceive() {
-    const { orderId, actioning } = this.data;
-    if (actioning) return;
-
-    wx.showModal({
-      title: '确认收货',
-      content: '确认已经收到商品了吗？',
-      success: (res) => {
-        if (!res.confirm) return;
-
-        this.setData({ actioning: true });
-        put(`/orders/${orderId}/confirm`)
-          .then(() => {
-            wx.showToast({ title: '已确认收货', icon: 'success' });
-            this.loadOrderDetail(orderId);
-          })
-          .catch(error => {
-            console.error('Confirm order error:', error);
-            wx.showToast({ title: error?.message || error?.detail || '确认失败', icon: 'none' });
-          })
-          .finally(() => {
-            this.setData({ actioning: false });
-          });
-      }
+  copyCustomerWechat() {
+    wx.setClipboardData({
+      data: this.data.customerWechat || CUSTOMER_SERVICE_WECHAT,
+      success: () => wx.showToast({ title: '微信号已复制', icon: 'success' })
     });
   },
 

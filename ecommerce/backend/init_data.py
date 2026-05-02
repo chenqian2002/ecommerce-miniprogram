@@ -272,21 +272,31 @@ def add_users(db):
     
     users = [
         UserModel(
-            phone="13800138000",
-            nickname="张三",
-            avatar="https://via.placeholder.com/100x100?text=User1",
+            phone="13859631156",
+            nickname="张三（商家）",
+            avatar="https://via.placeholder.com/100x100?text=Merchant",
+            role="merchant",
             password_hash=hash_password("123456")  # 密码: 123456
         ),
         UserModel(
             phone="13800138001",
-            nickname="李四",
-            avatar="https://via.placeholder.com/100x100?text=User2",
+            nickname="李四（买家测试）",
+            avatar="https://via.placeholder.com/100x100?text=Buyer1",
+            role="customer",
+            password_hash=hash_password("123456")  # 密码: 123456
+        ),
+        UserModel(
+            phone="13800138002",
+            nickname="王五（买家测试）",
+            avatar="https://via.placeholder.com/100x100?text=Buyer2",
+            role="customer",
             password_hash=hash_password("123456")  # 密码: 123456
         ),
         UserModel(
             openid="test_openid_001",
             nickname="微信用户",
             avatar="https://via.placeholder.com/100x100?text=WeChat",
+            role="customer",
             password_hash=hash_password("123456")
         ),
     ]
@@ -301,8 +311,10 @@ def add_users(db):
     db.commit()
     print(f"✅ 添加了 {len(users)} 个测试用户")
     print("\n📝 测试账号信息：")
-    print("   账号: 13800138000  密码: 123456")
-    print("   账号: 13800138001  密码: 123456")
+    print("   商家账号: 13859631156  密码: 123456")
+    print("   买家测试: 13800138001  密码: 123456")
+    print("   买家测试: 13800138002  密码: 123456")
+    print("   买家微信: 微信一键登录")
 
 def add_addresses(db):
     """添加收货地址"""
@@ -318,7 +330,7 @@ def add_addresses(db):
         address = AddressModel(
             user_id=user.id,
             receiver_name=user.nickname,
-            phone=user.phone or "13800138000",
+            phone=user.phone or "13859631156",
             province="北京市",
             city="朝阳区",
             district="三里屯",

@@ -82,3 +82,130 @@ page {
   max-width: 90%;
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
 }
+
+/* 全局统一空状态 */
+.app-empty {
+  min-height: 360rpx;
+  padding: 80rpx 36rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #64748b;
+}
+
+.app-empty-icon {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 62rpx;
+  margin-bottom: 22rpx;
+  box-shadow: 0 12rpx 26rpx rgba(37, 99, 235, 0.10);
+}
+
+.app-empty-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 10rpx;
+}
+
+.app-empty-desc {
+  max-width: 560rpx;
+  font-size: 25rpx;
+  line-height: 1.7;
+  color: #64748b;
+  margin-bottom: 26rpx;
+}
+
+.app-empty-btn {
+  min-width: 220rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+  padding: 0 34rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 700;
+  box-shadow: 0 12rpx 24rpx rgba(37, 99, 235, 0.18);
+}
+
+.app-loading-text {
+  min-height: 260rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 28rpx;
+}
+
+/* 全局骨架屏 */
+.app-skeleton {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.skeleton-block {
+  display: block;
+  background: linear-gradient(90deg, #eef2f7 25%, #f8fafc 37%, #eef2f7 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.25s ease-in-out infinite;
+}
+
+.skeleton-radius-sm { border-radius: 12rpx; }
+.skeleton-radius-md { border-radius: 18rpx; }
+.skeleton-radius-lg { border-radius: 28rpx; }
+.skeleton-radius-round { border-radius: 999rpx; }
+
+.skeleton-line {
+  height: 24rpx;
+  margin-bottom: 14rpx;
+}
+
+.skeleton-line-lg {
+  height: 34rpx;
+  margin-bottom: 18rpx;
+}
+
+.skeleton-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 26rpx;
+  padding: 22rpx;
+  box-sizing: border-box;
+  box-shadow: 0 14rpx 28rpx rgba(15, 23, 42, 0.06);
+  border: 1rpx solid rgba(226, 232, 240, 0.85);
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+}
+
+.skeleton-product-image {
+  width: 100%;
+  height: 220rpx;
+  border-radius: 22rpx;
+  margin-bottom: 18rpx;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+

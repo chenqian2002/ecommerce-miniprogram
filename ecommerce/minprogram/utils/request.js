@@ -2,19 +2,18 @@
 const app = getApp();
 
 /**
- * 封装网络请求
+ * 底层请求，不做重试
  */
-export function request(options) {
+function rawRequest(options) {
   return new Promise((resolve, reject) => {
     const {
       url,
       method = 'GET',
       data = {},
       header = {},
-      timeout = 15000  // 15秒超时
+      timeout = 15000
     } = options;
 
-    // 获取token
     const token = wx.getStorageSync('token');
     const finalHeader = {
       'Content-Type': 'application/json',
@@ -32,12 +31,16 @@ export function request(options) {
       header: finalHeader,
       timeout,
       success(res) {
-                if (res.statusCode === 401) {
-          wx.removeStorageSync('token');
-          wx.reLaunch({
-            url: '/pages/login/login'
-          });
-          reject(new Error('未授权，请重新登录'));
+        if (res.statusCode === 401 || res.statusCode === 403) {
+          const hasToken = !!wx.getStorageSync('token');
+          const raw = res.data || {};
+          const message = raw.detail || raw.message || (res.statusCode === 403 ? '无权限' : '未登录');
+
+          if (res.statusCode === 401 && hasToken) {
+            wx.clearStorageSync();
+            wx.reLaunch({ url: '/pages/login/login' });
+          }
+          reject(new Error(message));
         } else if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
         } else {
@@ -60,6 +63,39 @@ export function request(options) {
       }
     });
   });
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isRetryableError(error) {
+  if (!error) return false;
+  const msg = (error.message || '').toLowerCase();
+  if (msg.includes('timeout') || msg.includes('网络') || msg.includes('network') || msg.includes('fail')) return true;
+  if (error.statusCode && error.statusCode >= 500) return true;
+  return false;
+}
+
+/**
+ * 封装网络请求，支持自动重试
+ * options.maxRetries: 最大重试次数，默认 2
+ * options.retryDelay: 重试间隔毫秒数，默认 1000
+ */
+export function request(options) {
+  const { maxRetries = 2, retryDelay = 1000, ...rawOptions } = options || {};
+
+  function attempt(retriesLeft) {
+    return rawRequest(rawOptions).catch(error => {
+      if (retriesLeft > 0 && isRetryableError(error)) {
+        console.warn(`[Request] 请求失败，剩余重试 ${retriesLeft} 次:`, error.message);
+        return delay(retryDelay).then(() => attempt(retriesLeft - 1));
+      }
+      throw error;
+    });
+  }
+
+  return attempt(maxRetries);
 }
 
 /**
@@ -103,6 +139,19 @@ export function del(url, data = {}) {
     url,
     method: 'DELETE',
     data
+  });
+}
+
+/**
+ * 防重复提交锁（防止短时间内重复调用）
+ */
+const _pendingLocks = {};
+
+export function withLock(key, fn) {
+  if (_pendingLocks[key]) return Promise.resolve();
+  _pendingLocks[key] = true;
+  return fn().finally(() => {
+    setTimeout(() => { _pendingLocks[key] = false; }, 1500);
   });
 }
 

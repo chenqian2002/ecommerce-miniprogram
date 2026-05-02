@@ -22,6 +22,12 @@
   box-shadow: 0 18rpx 36rpx rgba(15, 23, 42, 0.12);
 }
 
+.banner-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .banner-item {
   height: 420rpx;
   display: flex;
@@ -89,6 +95,90 @@
   font-size: 30rpx;
   font-weight: 700;
   margin-bottom: 12rpx;
+  color: #0f172a;
+}
+
+.service-card {
+  border-color: #bfdbfe;
+}
+
+.service-desc {
+  color: #64748b;
+  font-size: 26rpx;
+  line-height: 1.6;
+  margin-bottom: 18rpx;
+}
+
+.service-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  align-items: center;
+}
+
+.service-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.service-label {
+  color: #94a3b8;
+  font-size: 24rpx;
+  margin-bottom: 8rpx;
+}
+
+.service-wechat {
+  color: #0f172a;
+  font-size: 32rpx;
+  font-weight: 800;
+  word-break: break-all;
+  margin-bottom: 14rpx;
+}
+
+.copy-service-btn {
+  width: 220rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  color: #fff;
+  font-size: 24rpx;
+  padding: 0;
+}
+
+.service-qrcode {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 20rpx;
+  background: #f8fafc;
+  border: 1rpx solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.detail-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.detail-qty-btn {
+  width: 64rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #334155;
+  border-radius: 18rpx;
+  background: #f1f5f9;
+  border: 1rpx solid #e2e8f0;
+}
+
+.detail-qty-value {
+  min-width: 80rpx;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 600;
   color: #0f172a;
 }
 

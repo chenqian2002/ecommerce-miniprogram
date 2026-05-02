@@ -1,6 +1,8 @@
 // pages/mine/mine.js
 import { get } from '../../utils/request';
-import { getUserInfo } from '../../utils/storage';
+import { getUserInfo, clearStorage } from '../../utils/storage';
+import { ensureLoggedIn, ensureMerchantLogin } from '../../utils/auth';
+
 
 Page({
   data: {
@@ -22,13 +24,17 @@ Page({
     ]
   },
 
-  onLoad() {
+    onLoad() {
+    if (!ensureLoggedIn()) return;
     this.loadProfile();
   },
 
-  onShow() {
+
+    onShow() {
+    if (!ensureLoggedIn()) return;
     this.loadProfile();
   },
+
 
   loadProfile() {
     this.setData({ loading: true });
@@ -45,6 +51,7 @@ Page({
         const orders = Array.isArray(res) ? res : (res.data || []);
         const stats = {
           pending: orders.filter(o => o.status === 'pending').length,
+          paid: orders.filter(o => o.status === 'paid').length,
           shipped: orders.filter(o => o.status === 'shipped').length,
           received: orders.filter(o => o.status === 'completed').length
         };
@@ -84,9 +91,11 @@ Page({
     wx.navigateTo({ url: '/pages/favorites/favorites' });
   },
 
-  handleMerchant() {
+    handleMerchant() {
+    if (!ensureMerchantLogin()) return;
     wx.navigateTo({ url: '/pages/merchant/merchant' });
   },
+
 
   handleSettings() {
     wx.navigateTo({ url: '/pages/settings/settings' });
@@ -120,14 +129,13 @@ Page({
     if (key === 'merchant') return this.handleMerchant();
   },
 
-  logout() {
+    logout() {
     wx.showModal({
       title: '确认退出',
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
-          wx.removeStorageSync('token');
-          wx.removeStorageSync('userInfo');
+          clearStorage();
           wx.reLaunch({
             url: '/pages/login/login'
           });
@@ -135,6 +143,7 @@ Page({
       }
     });
   }
+
 });
 
 

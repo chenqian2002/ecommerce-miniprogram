@@ -1,44 +1,46 @@
 <!--pages/cart/cart.wxml-->
 <view class="cart-container">
-  <view class="empty-state" wx:if="{{loading}}">
-    <view class="empty-text">购物车加载中...</view>
+  <view class="app-skeleton" wx:if="{{loading}}" style="padding: 20rpx 24rpx;">
+        <view wx:for="{{skeletonCartItems}}" wx:key="*this" class="skeleton-card" style="margin-bottom: 18rpx;">
+
+      <view class="skeleton-block skeleton-line-lg skeleton-radius-round" style="width: 70%;"></view>
+      <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 36%;"></view>
+    </view>
   </view>
 
-  <view class="empty-state" wx:elif="{{cart.length === 0}}">
-    <view class="empty-text">购物车是空的</view>
-    <view class="empty-tip">去商品页选购商品后再回来结算</view>
+  <view class="app-empty" wx:elif="{{cart.length === 0}}">
+    <view class="app-empty-icon">🛒</view>
+    <view class="app-empty-title">购物车是空的</view>
+    <view class="app-empty-desc">去商品页选购商品后，再回来一起结算</view>
+    <button class="app-empty-btn" bindtap="goToProducts">去逛逛</button>
   </view>
 
   <view wx:else>
     <view class="cart-list">
-      <view 
-        wx:for="{{cart}}" 
-        wx:key="id"
-        class="cart-item"
-      >
-        <view class="item-name">{{item.name}}</view>
-        <view class="item-price">¥{{item.price}}</view>
-        <view class="item-qty">数量: {{item.quantity}}</view>
-        <view class="qty-actions">
-          <button class="qty-btn" bindtap="handleReduceQuantity" data-item-id="{{item.id}}">-</button>
-          <button class="qty-btn" bindtap="handleIncreaseQuantity" data-item-id="{{item.id}}">+</button>
+      <view wx:for="{{cart}}" wx:key="id" class="cart-item">
+        <view class="item-row">
+          <image wx:if="{{item.image_url}}" class="item-image" src="{{item.image_url}}" mode="aspectFill" />
+          <view wx:else class="item-image-placeholder">📦</view>
+          <view class="item-info">
+            <view class="item-name">{{item.name}}</view>
+            <view class="item-price">¥{{item.price}}</view>
+          </view>
         </view>
-        <button 
-          class="item-remove"
-          bindtap="handleRemoveItem"
-          data-item-id="{{item.id}}"
-        >
-          删除
-        </button>
+        <view class="item-bottom">
+          <view class="qty-actions">
+            <button class="qty-btn minus" bindtap="handleReduceQuantity" data-item-id="{{item.id}}" disabled="{{actioningItemId === item.id}}">-</button>
+            <view class="qty-num">{{item.quantity}}</view>
+            <button class="qty-btn plus" bindtap="handleIncreaseQuantity" data-item-id="{{item.id}}" disabled="{{actioningItemId === item.id}}">+</button>
+          </view>
+          <button class="item-remove" bindtap="handleRemoveItem" data-item-id="{{item.id}}" loading="{{actioningItemId === item.id}}" disabled="{{actioningItemId === item.id}}">删除</button>
+        </view>
       </view>
     </view>
 
     <view class="cart-footer">
       <view class="total-info">共 {{cart.length}} 件</view>
       <view class="total-price">合计：¥{{totalPrice}}</view>
-      <button class="btn-checkout" bindtap="handleCheckout">
-        立即结算
-      </button>
+      <button class="btn-checkout" bindtap="handleCheckout" loading="{{checkingOut}}" disabled="{{checkingOut}}">立即结算</button>
     </view>
   </view>
 </view>

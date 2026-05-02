@@ -13,6 +13,21 @@
       <view class="row"><text>下单时间</text><text>{{order.created_at}}</text></view>
     </view>
 
+    <view class="card service-card" wx:if="{{order.status === 'paid' || order.status === 'shipped' || order.status === 'completed'}}">
+      <view class="section-title">物流图片备注</view>
+      <view class="service-desc">请务必添加客服微信，客服会发送物流图片。</view>
+      <view class="service-wechat">客服微信：{{customerWechat}}</view>
+      <image wx:if="{{customerQrCode}}" class="service-qrcode" src="{{customerQrCode}}" mode="aspectFit" show-menu-by-longpress="true" />
+      <view wx:else class="service-qrcode-tip">请在配置中添加客服二维码图片，买家可扫码添加客服。</view>
+      <button class="copy-service-btn" bindtap="copyCustomerWechat">复制客服微信</button>
+    </view>
+
+    <view class="card" wx:if="{{order.status === 'shipped'}}">
+      <view class="section-title">物流状态</view>
+      <view class="shipping-banner">🚚 商家已发货，请留意快递信息</view>
+      <view class="shipping-desc">客服会通过微信发送物流图片，请保持微信联系。</view>
+    </view>
+
     <view class="card" wx:if="{{order.address}}">
       <view class="section-title">收货地址</view>
       <view class="address-name">{{order.address.receiver_name}} {{order.address.phone}}</view>
@@ -56,14 +71,6 @@
       >
         取消订单
       </button>
-      <button
-        wx:if="{{order.status === 'shipped' || order.status === 'paid'}}"
-        class="action-btn primary-btn"
-        bindtap="confirmReceive"
-        loading="{{actioning}}"
-      >
-        确认收货
-      </button>
     </view>
   </view>
 
@@ -71,5 +78,9 @@
     <view class="empty-icon">📦</view>
     <view class="empty-text">暂无订单详情</view>
     <view class="empty-tip">你可以先去商品页下单，再回来查看</view>
+  </view>
+
+  <view class="footer-actions">
+    <button class="back-btn" bindtap="goBack">返回订单列表</button>
   </view>
 </view>

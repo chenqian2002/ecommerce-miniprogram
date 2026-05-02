@@ -4,12 +4,12 @@
   <view class="section-desc">请选择收货地址，确认商品后即可提交订单并完成支付。</view>
   <view class="card">
     <view class="section-subtitle">收货地址</view>
-    <view wx:if="{{loadingAddresses}}" class="loading-text">地址加载中...</view>
-    <view wx:elif="{{addresses.length === 0}}" class="empty-address">
-      <view class="empty-icon">📍</view>
-      <view class="empty-text">当前没有可用收货地址</view>
-      <view class="empty-tip">请先新增收货地址，再继续提交订单</view>
-      <button class="add-address-btn" bindtap="goToAddAddress">新增地址</button>
+    <view wx:if="{{loadingAddresses}}" class="app-loading-text">地址加载中...</view>
+    <view wx:elif="{{addresses.length === 0}}" class="app-empty checkout-empty">
+      <view class="app-empty-icon">📍</view>
+      <view class="app-empty-title">暂无收货地址</view>
+      <view class="app-empty-desc">请先新增收货地址，再继续提交订单</view>
+      <button class="app-empty-btn" bindtap="goToAddAddress">新增地址</button>
     </view>
     <view wx:else class="address-list">
       <view
@@ -32,8 +32,12 @@
 
   <view class="card">
     <view class="section-subtitle">商品清单</view>
-    <view wx:if="{{loadingCart}}" class="loading-text">购物车加载中...</view>
-    <view wx:elif="{{cart.length === 0}}" class="empty-goods">购物车为空，请先添加商品</view>
+    <view wx:if="{{loadingCart}}" class="app-loading-text">购物车加载中...</view>
+    <view wx:elif="{{cart.length === 0}}" class="app-empty checkout-empty">
+      <view class="app-empty-icon">🛒</view>
+      <view class="app-empty-title">购物车为空</view>
+      <view class="app-empty-desc">请先添加商品，再回来提交订单</view>
+    </view>
     <view wx:else>
       <view wx:for="{{cart}}" wx:key="id" class="goods-item">
         <view class="goods-name">{{item.name}}</view>
@@ -52,4 +56,28 @@
   <button class="submit-btn" bindtap="handleSubmitOrder" loading="{{submitting}}" disabled="{{submitting || cart.length === 0 || addresses.length === 0}}">
     提交订单并支付
   </button>
+
+  <view wx:if="{{serviceDialogVisible}}" class="service-mask">
+    <view class="service-dialog">
+      <view class="service-title">下单成功</view>
+      <view class="service-desc">请添加客服微信，客服会为你发送物流订单图片。</view>
+      <view class="service-qr-wrap">
+        <image wx:if="{{customerQrCode}}" class="service-qr" src="{{customerQrCode}}" mode="aspectFit" />
+        <view wx:else class="service-qr-placeholder">
+          <view class="qr-icon">▦</view>
+          <view class="qr-text">客服微信二维码</view>
+          <view class="qr-tip">请将二维码图片路径配置到 utils/config.js</view>
+        </view>
+      </view>
+      <view class="wechat-card">
+        <text class="wechat-label">客服微信</text>
+        <text class="wechat-value">{{customerWechat}}</text>
+      </view>
+      <view class="service-actions">
+        <button class="copy-btn" bindtap="copyCustomerWechat">复制微信号</button>
+        <button class="order-btn" bindtap="viewLatestOrder">查看订单</button>
+      </view>
+      <button class="close-service-btn" bindtap="closeServiceDialog">稍后添加</button>
+    </view>
+  </view>
 </view>

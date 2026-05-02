@@ -15,6 +15,11 @@
       <view class="stat-text">待付款</view>
       <view class="stat-count">{{stats.pending}}</view>
     </view>
+    <view class="stat-item" bindtap="goToOrders" data-status="paid">
+      <view class="stat-icon">📦</view>
+      <view class="stat-text">待发货</view>
+      <view class="stat-count">{{stats.paid}}</view>
+    </view>
     <view class="stat-item" bindtap="goToOrders" data-status="shipped">
       <view class="stat-icon">🚚</view>
       <view class="stat-text">待收货</view>

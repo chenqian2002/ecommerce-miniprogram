@@ -14,20 +14,41 @@
   </view>
 
   <view class="content">
-    <view wx:if="{{loading}}" class="loading-state">加载中...</view>
+            <view wx:if="{{loading}}" class="app-skeleton">
+            <view wx:for="{{skeletonOrders}}" wx:key="*this" class="skeleton-card" style="margin-bottom: 16rpx;">
 
-    <view wx:elif="{{orders.length === 0}}" class="empty">
-      <view class="empty-icon">📦</view>
-      <view class="empty-title">暂无订单</view>
-      <view class="empty-desc">去商品页逛逛，选中商品后即可下单</view>
-      <button class="empty-btn" bindtap="goToProducts">去逛逛</button>
+        <view class="skeleton-row" style="margin-bottom: 18rpx;">
+          <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 58%;"></view>
+          <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 120rpx;"></view>
+        </view>
+        <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 82%;"></view>
+        <view class="skeleton-row" style="margin-top: 22rpx;">
+          <view class="skeleton-block skeleton-line skeleton-radius-round" style="width: 32%;"></view>
+          <view class="skeleton-block skeleton-line-lg skeleton-radius-round" style="width: 42%;"></view>
+        </view>
+      </view>
     </view>
+
+
+    <view wx:elif="{{orders.length === 0}}" class="app-empty">
+      <view class="app-empty-icon">📦</view>
+      <view class="app-empty-title">暂无订单</view>
+      <view class="app-empty-desc">去商品页逛逛，选中商品后即可下单</view>
+      <button class="app-empty-btn" bindtap="goToProducts">去逛逛</button>
+    </view>
+
 
     <view wx:else class="order-list">
       <view wx:for="{{orders}}" wx:key="id" class="order-card">
         <view class="order-header">
           <view class="order-no">订单号：{{item.order_no}}</view>
           <view class="order-status status-{{item.status}}">{{item.status_text}}</view>
+        </view>
+
+        <view wx:if="{{item.status === 'shipped'}}" class="shipping-tip">🚚 商品已发货，请留意物流信息</view>
+        <view wx:if="{{item.service_note}}" class="service-note">
+          <view>{{item.service_note}}</view>
+          <button class="copy-service-btn" bindtap="copyCustomerWechat">复制客服微信</button>
         </view>
 
         <view class="order-footer">
@@ -39,9 +60,31 @@
           <button class="action-btn" bindtap="detailOrder" data-order-id="{{item.id}}">查看详情</button>
           <button wx:if="{{item.status === 'pending'}}" class="action-btn pay-btn" bindtap="payOrder" data-order-id="{{item.id}}">立即支付</button>
           <button wx:if="{{item.status === 'pending'}}" class="action-btn danger-btn" bindtap="cancelOrder" data-order-id="{{item.id}}">取消订单</button>
+          <button wx:if="{{item.status === 'shipped'}}" class="action-btn pay-btn" bindtap="confirmOrder" data-order-id="{{item.id}}">确认收货</button>
+          <button wx:if="{{item.status === 'paid' || item.status === 'shipped' || item.status === 'completed'}}" class="action-btn refund-btn" bindtap="refundOrder" data-order-id="{{item.id}}">退款/售后</button>
         </view>
       </view>
     </view>
   </view>
-</view>
 
+  <view class="footer-actions">
+    <button class="back-btn" bindtap="goBack">返回商品页</button>
+  </view>
+
+  <!-- 退款/售后弹窗 -->
+  <view wx:if="{{refundDialogVisible}}" class="refund-mask">
+    <view class="refund-dialog">
+      <view class="refund-header">
+        <view class="refund-title">退款 / 售后</view>
+      </view>
+      <view class="refund-content">
+        <view class="refund-desc">如需退款或售后，请添加客服微信，客服会协助您处理。</view>
+        <view class="refund-tip">客服微信：<text class="refund-wechat" selectable="true">{{customerWechat}}</text></view>
+      </view>
+      <view class="refund-actions">
+        <button class="refund-copy-btn" bindtap="copyCustomerWechat">复制客服微信</button>
+        <button class="refund-close-btn" bindtap="closeRefundDialog">关闭</button>
+      </view>
+    </view>
+  </view>
+</view>

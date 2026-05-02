@@ -1,20 +1,31 @@
 // pages/cart/cart.js
 import { get, put, del } from '../../utils/request';
+import { ensureLoggedIn } from '../../utils/auth';
+
 
 Page({
-  data: {
+    data: {
     cart: [],
     totalPrice: 0,
-    loading: false
+        loading: false,
+    skeletonCartItems: [1, 2, 3],
+    actioningItemId: null,
+
+    checkingOut: false
   },
 
-  onLoad() {
+
+    onLoad() {
+    if (!ensureLoggedIn()) return;
     this.loadCart();
   },
 
-    onShow() {
+
+      onShow() {
+    if (!ensureLoggedIn()) return;
     this.loadCart();
   },
+
 
   onPullDownRefresh() {
     this.loadCart(true);
@@ -46,11 +57,14 @@ Page({
       });
   },
 
-  handleIncreaseQuantity(e) {
+    handleIncreaseQuantity(e) {
     const itemId = parseInt(e.currentTarget.dataset.itemId);
+    if (this.data.actioningItemId) return;
+
     const item = this.data.cart.find(i => i.id === itemId);
     if (!item) return;
 
+    this.setData({ actioningItemId: itemId });
     put(`/cart/${itemId}`, {
       product_id: item.product_id,
       quantity: item.quantity + 1
@@ -59,14 +73,21 @@ Page({
       .catch(error => {
         console.error('Update cart error:', error);
         wx.showToast({ title: error.message || '修改失败', icon: 'none' });
+      })
+      .finally(() => {
+        this.setData({ actioningItemId: null });
       });
   },
 
-  handleReduceQuantity(e) {
+
+    handleReduceQuantity(e) {
     const itemId = parseInt(e.currentTarget.dataset.itemId);
+    if (this.data.actioningItemId) return;
+
     const item = this.data.cart.find(i => i.id === itemId);
     if (!item) return;
 
+    this.setData({ actioningItemId: itemId });
     if (item.quantity <= 1) {
       del(`/cart/${itemId}`)
         .then(() => {
@@ -76,6 +97,9 @@ Page({
         .catch(error => {
           console.error('Delete cart item error:', error);
           wx.showToast({ title: error.message || '删除失败', icon: 'none' });
+        })
+        .finally(() => {
+          this.setData({ actioningItemId: null });
         });
       return;
     }
@@ -88,12 +112,18 @@ Page({
       .catch(error => {
         console.error('Update cart error:', error);
         wx.showToast({ title: error.message || '修改失败', icon: 'none' });
+      })
+      .finally(() => {
+        this.setData({ actioningItemId: null });
       });
   },
 
-  handleRemoveItem(e) {
-    const itemId = parseInt(e.currentTarget.dataset.itemId);
 
+    handleRemoveItem(e) {
+    const itemId = parseInt(e.currentTarget.dataset.itemId);
+    if (this.data.actioningItemId) return;
+
+    this.setData({ actioningItemId: itemId });
     del(`/cart/${itemId}`)
       .then(() => {
         this.loadCart();
@@ -102,17 +132,33 @@ Page({
       .catch(error => {
         console.error('Delete cart item error:', error);
         wx.showToast({ title: error.message || '删除失败', icon: 'none' });
+      })
+      .finally(() => {
+        this.setData({ actioningItemId: null });
       });
   },
 
-  handleCheckout() {
-    if (this.data.cart.length === 0) {
-      wx.showToast({ title: '购物车是空的', icon: 'none' });
-      return;
+
+    handleCheckout() {
+      if (this.data.checkingOut) return;
+
+      if (this.data.cart.length === 0) {
+        wx.showToast({ title: '购物车是空的', icon: 'none' });
+        return;
+      }
+
+      this.setData({ checkingOut: true });
+      wx.navigateTo({
+        url: '/pages/checkout/checkout',
+        complete: () => {
+          this.setData({ checkingOut: false });
+        }
+      });
+    },
+
+    goToProducts() {
+      wx.switchTab({ url: '/pages/products/products' });
     }
 
-    wx.navigateTo({
-      url: '/pages/checkout/checkout'
-    });
-  }
+
 });
